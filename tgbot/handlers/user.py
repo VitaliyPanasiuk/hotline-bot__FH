@@ -8,8 +8,17 @@ import psycopg2
 from psycopg2 import sql
 from psycopg2.extensions import AsIs
 
-from tgbot.misc.states import reg_user
+from tgbot.misc.states import reg_user,make_req
 from tgbot.misc.functions import auf
+
+from tgbot.keyboards.textBtn import choose_cat_button
+from tgbot.keyboards.inlineBtn import choose_delivery_button
+
+
+import requests
+from bs4 import BeautifulSoup
+import re
+
 
 user_router = Router()
 config = load_config(".env")
@@ -17,6 +26,9 @@ bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
 
 base = psycopg2.connect(dbname=config.db.database, user=config.db.user, password=config.db.password,host=config.db.host)
 cur = base.cursor()
+
+headers = {
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36 OPR/90.0.4480.117'}
 
 
 @user_router.message(commands=["start"])
@@ -55,4 +67,72 @@ async def test_start(message: Message, state: FSMContext):
 
 @user_router.message(commands=["buy"])
 async def user_start(message: Message, state: FSMContext):
-    await message.reply("Привет!")
+    await message.reply("Привет!\nВведи название товара")
+    await state.set_state(make_req.name)
+    
+@user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.name)
+async def test_start(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    text = message.text
+    await state.update_data(name=text)
+    
+    arr = text.split(' ')
+    url = "https://hotline.ua/sr/?q="
+    for elem in arr:
+        url += elem + "%20"
+        
+    r = requests.get(url, headers=headers)
+    soup = BeautifulSoup(r.text, 'lxml')
+    try:
+        cat = soup.findAll('div', class_='search-sidebar-catalogs__name')
+        price = soup.find('div', class_='list-item__value--overlay').find('div', class_='m_b-5').find('div', class_='text-sm')
+        categories = []
+        price = price.text.strip()
+        for i in cat:
+            p = re.sub(r'\([^)]*\)', '', i.text).strip()
+            categories.append(p)
+            
+        btn = choose_cat_button(categories)
+        await bot.send_message(user_id, "Выберите нужную категорию",reply_markup=btn.as_markup(resize_keyboard=True))
+        await state.set_state(make_req.cat)
+    except:
+        await bot.send_message(user_id, "Такого товара не найдено, проверьте правильность написания названия и введите его заново",reply_markup=types.ReplyKeyboardRemove())
+        await state.set_state(make_req.name)
+        
+@user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.cat)
+async def test_start(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    text = message.text
+    await state.update_data(cat=text)
+    arr = []
+    btn = choose_delivery_button(arr)
+    await bot.send_message(user_id, "Отлично!",reply_markup=types.ReplyKeyboardRemove())
+    await bot.send_message(user_id, "Укажите желательный способ доставки",reply_markup=btn.as_markup())
+    
+
+@user_router.callback_query(lambda c: c.data == 'deliveri_done', state=make_req)
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
+    cur.execute("SELECT delivery FROM buyers WHERE id = %s",(str(user_id),))
+    deliveri = cur.fetchone()
+    await state.update_data(delivers=deliveri[0])
+    await bot.send_message(user_id, "Отлично, укажите свой город",reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(make_req.city)
+    
+@user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.city)
+async def test_start(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    text = message.text
+    await state.update_data(city=text)
+    await bot.send_message(user_id, "Отлично, укажите дополнительные требования коментарием к заказу",reply_markup=types.ReplyKeyboardRemove())
+    await state.set_state(make_req.comment)
+    
+@user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.city)
+async def test_start(message: Message, state: FSMContext):
+    user_id = message.from_user.id
+    text = message.text
+    await state.update_data(comment=text)
+    await bot.send_message(user_id, "Отлично, ваша заявка принята",reply_markup=types.ReplyKeyboardRemove())
+    
+    
+    

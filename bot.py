@@ -7,6 +7,7 @@ from aiogram.dispatcher.fsm.storage.memory import MemoryStorage
 from tgbot.config import load_config
 from tgbot.handlers.admin import admin_router
 from tgbot.handlers.user import user_router
+from tgbot.handlers.buyer import buyer_router
 from tgbot.middlewares.config import ConfigMiddleware
 from tgbot.db import start_db
 from tgbot.services import broadcaster
@@ -39,6 +40,7 @@ async def main():
     for router in [
         admin_router,
         user_router,
+        buyer_router,
     ]:
         dp.include_router(router)
 
