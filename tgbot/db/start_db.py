@@ -10,9 +10,31 @@ async def postgre_start():
     cur = base.cursor()
     if base:
         print('data base connect Ok!')
-    # cur.execute('''CREATE TABLE IF NOT EXISTS (
-        
-    #     )''')
+    cur.execute('''CREATE table if not exists buyers
+(
+    id       text not null
+        constraint testtable_pk
+            primary key,
+    name     text,
+    rating   integer default 0,
+    phone    text,
+    delivery text[]
+);
+
+create table if not exists sellers
+(
+    id           text not null
+        constraint sellers_pk
+            primary key,
+    name         text,
+    org_form     text,
+    category     text,
+    phone        text,
+    rating       integer default 0,
+    person_phone text
+);
+
+)''')
     
     
     base.commit()
