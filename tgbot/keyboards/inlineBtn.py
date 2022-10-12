@@ -1,5 +1,17 @@
 from aiogram.utils.keyboard import ReplyKeyboardBuilder, InlineKeyboardButton, InlineKeyboardBuilder
 from aiogram import Bot, types
+from typing import Optional
+from aiogram.dispatcher.filters.callback_data import CallbackData
+
+class SellersCallbackFactory(CallbackData, prefix="fabnum"):
+    action: str
+    order_id: Optional[int]
+    seller_id: Optional[str]
+    price: Optional[str]
+    term: Optional[str]
+    com: Optional[str]
+
+
 
 
 def choose_delivery_button(arr):
@@ -21,3 +33,19 @@ def choose_delivery_button(arr):
         callback_data='deliveri_done'
     ))
     return example
+
+def accept_order_btn(order):
+    builder = InlineKeyboardBuilder()
+    print(order)
+    print(type(order))
+    builder.button(
+        text="Прийняти", callback_data=SellersCallbackFactory(action="accept_order", order_id=int(order))
+    )
+    return builder
+
+def accept_order_buyer_btn(seller_id,order_price,order_term,order_com,order_id):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="Прийняти", callback_data=SellersCallbackFactory(action="accept_order_buyer", seller_id=str(seller_id),price = str(order_price),term = str(order_term),com = str(order_com),order_id=int(order_id))
+    )
+    return builder

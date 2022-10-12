@@ -7,10 +7,11 @@ from aiogram.dispatcher.fsm.storage.memory import MemoryStorage
 from tgbot.config import load_config
 from tgbot.handlers.admin import admin_router
 from tgbot.handlers.user import user_router
-from tgbot.handlers.buyer import buyer_router
+from tgbot.handlers.sellers import seller_router
 from tgbot.middlewares.config import ConfigMiddleware
 from tgbot.db import start_db
 from tgbot.services import broadcaster
+from tgbot.misc.functions import update_category
 
 logger = logging.getLogger(__name__)
 
@@ -35,19 +36,25 @@ async def main():
 
     storage = MemoryStorage()
     bot = Bot(token=config.tg_bot.token, parse_mode='HTML')
+    bot2 = Bot(token=config.tg_bot.token2, parse_mode='HTML')
     dp = Dispatcher(storage=storage)
+    dp2 = Dispatcher(storage=storage)
 
     for router in [
         admin_router,
         user_router,
-        buyer_router,
     ]:
         dp.include_router(router)
+    for router in [
+        seller_router,
+    ]:
+        dp2.include_router(router)
 
     register_global_middlewares(dp, config)
+    register_global_middlewares(dp2, config)
 
-    await on_startup(bot, config.tg_bot.admin_ids)
-    await dp.start_polling(bot)
+    # await on_startup(bot, config.tg_bot.admin_ids)
+    await asyncio.gather(dp.start_polling(bot), dp2.start_polling(bot2),update_category())
 
 
 if __name__ == '__main__':

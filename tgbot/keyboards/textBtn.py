@@ -10,3 +10,17 @@ def choose_cat_button(categories):
         )
     home_buttons.adjust(1)
     return home_buttons
+
+def choose_action():
+    home_buttons = ReplyKeyboardBuilder()
+    home_buttons.add(
+        types.KeyboardButton(text='Підтвердити виконання')
+    )
+    home_buttons.add(
+        types.KeyboardButton(text='Скарга')
+    )
+    home_buttons.add(
+        types.KeyboardButton(text='Відмінити замовлення')
+    )
+    home_buttons.adjust(1)
+    return home_buttons
