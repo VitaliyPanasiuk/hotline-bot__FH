@@ -48,7 +48,7 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(name=text)
-    await bot2.send_message(user_id, "Відправ мені свій email")
+    await bot2.send_message(user_id, "Відправте мені свій email")
     await state.set_state(reg_user.email)
 
 @seller_router.message_handler(content_types=types.ContentType.TEXT, state=reg_user.email)
@@ -56,7 +56,7 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(email=text)
-    await bot2.send_message(user_id, "Відправ мені свой номер телефону")
+    await bot2.send_message(user_id, "Відправте мені свой номер телефону")
     await state.set_state(reg_user.phone)
 
 
@@ -65,7 +65,7 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(phone=text)
-    await bot2.send_message(user_id, "Відправ мені организаційно правову форма (Физ.лицо, Физ.лицо предприниматель, Юр.лицо)")
+    await bot2.send_message(user_id, "Відправте мені организаційно правову форма (Физ.лицо, Физ.лицо предприниматель, Юр.лицо)")
     await state.set_state(reg_user.org)
     
 
@@ -79,7 +79,7 @@ async def test_start(message: Message, state: FSMContext):
     cur.execute("INSERT INTO sellers (id, name, phone,org_form,email) VALUES (%s,%s,%s, %s, %s)",
                 (user_id, data['name'], data['phone'], data['org'], data['email']))
     base.commit()
-    await bot2.send_message(user_id, "Вы зареєстровані")
+    await bot2.send_message(user_id, "Ви зареєстровані")
     await bot2.send_message(user_id, "Щоб обрати категорії пройдіть тест\nhttps://forms.gle/BQAgbumLSM34cNv69")
 
 

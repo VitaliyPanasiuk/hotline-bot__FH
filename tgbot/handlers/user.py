@@ -34,7 +34,12 @@ base = psycopg2.connect(dbname=config.db.database, user=config.db.user, password
 cur = base.cursor()
 
 headers = {
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/104.0.5112.102 Safari/537.36 OPR/90.0.4480.117'}
+        "user-agent": "custom/2.22",
+        "referer": "https://www.google.com",
+        "accept": "text/html",
+        "accept-language": "en-US",
+        "custom-header-xyz": "hello; charset=utf-8"
+    }
 
 
 @user_router.message(commands=["start"])
@@ -68,13 +73,13 @@ async def test_start(message: Message, state: FSMContext):
     cur.execute("INSERT INTO buyers (id, name, phone,delivery) VALUES (%s, %s, %s, %s)",
                 (user_id, data['name'], data['phone'],[]))
     base.commit()
-    await bot.send_message(user_id, "Вы зареєстровані")
+    await bot.send_message(user_id, "Ви зареєстровані")
     await state.clear()
 
 
 @user_router.message(commands=["buy"])
 async def user_start(message: Message, state: FSMContext):
-    await message.reply("Привіт!\nВведи назву товару")
+    await message.reply("Привіт!\nВведіть назву товару")
     await state.set_state(make_req.name)
     
 @user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.name)
