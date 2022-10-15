@@ -167,7 +167,7 @@ async def test_start(message: Message, state: FSMContext):
 
     await mailing_sellers(data['name'], data['cat'], data['min_max'],rate,data['comment'],id,data['city'], data['delivers'])
     # TODO: change timer to 900
-    await asyncio.sleep(45)
+    await asyncio.sleep(900)
     print('end of await answers from sellers')
     cur.execute('''SELECT sellers,prices,seller_terms,seller_coms
                         FROM orders
