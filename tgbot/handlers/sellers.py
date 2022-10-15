@@ -13,7 +13,7 @@ from tgbot.misc.states import reg_user,make_req,accept_ord,end_order
 from tgbot.misc.functions import auf
 
 from tgbot.keyboards.textBtn import choose_cat_button,choose_action
-from tgbot.keyboards.inlineBtn import choose_delivery_button
+from tgbot.keyboards.inlineBtn import choose_delivery_button,homeS_button
 from tgbot.keyboards.inlineBtn import SellersCallbackFactory
 
 import datetime
@@ -37,10 +37,11 @@ async def user_start(message: Message, state: FSMContext):
     auf_user = await auf("seller", user_id)
     if not auf_user:
         await message.reply("Привіт!")
-        await bot2.send_message(user_id, "Відправ мені своє ім'я або назву компанії")
+        await bot2.send_message(user_id, "Відправте своє ім'я або назву компанії")
         await state.set_state(reg_user.name)
     else:
-        await message.reply("Привіт!")
+        btn = homeS_button()
+        await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
 
 
 @seller_router.message_handler(content_types=types.ContentType.TEXT, state=reg_user.name)
@@ -48,7 +49,7 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(name=text)
-    await bot2.send_message(user_id, "Відправте мені свій email")
+    await bot2.send_message(user_id, "Відправте свій email")
     await state.set_state(reg_user.email)
 
 @seller_router.message_handler(content_types=types.ContentType.TEXT, state=reg_user.email)
@@ -56,7 +57,7 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(email=text)
-    await bot2.send_message(user_id, "Відправте мені свой номер телефону")
+    await bot2.send_message(user_id, "Відправте свій номер телефону(який буде використовуватися для обслуговування клієнтів, що зареєстрований у Телеграм)")
     await state.set_state(reg_user.phone)
 
 
@@ -65,7 +66,7 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(phone=text)
-    await bot2.send_message(user_id, "Відправте мені организаційно правову форма (Физ.лицо, Физ.лицо предприниматель, Юр.лицо)")
+    await bot2.send_message(user_id, "Вкажіть організаційно-правову форму (фізична особа, ФОП, юридична особа)")
     await state.set_state(reg_user.org)
     
 
@@ -80,7 +81,9 @@ async def test_start(message: Message, state: FSMContext):
                 (user_id, data['name'], data['phone'], data['org'], data['email']))
     base.commit()
     await bot2.send_message(user_id, "Ви зареєстровані")
-    await bot2.send_message(user_id, "Щоб обрати категорії пройдіть тест\nhttps://forms.gle/BQAgbumLSM34cNv69")
+    await bot2.send_message(user_id, "Будь ласка, заповніть анкету та укажіть в ній усі цільові категорії товарів\послуг , що ви продаєте\надаєте!\nhttps://forms.gle/BQAgbumLSM34cNv69")
+    btn = homeS_button()
+    await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
 
 
 @seller_router.callback_query(SellersCallbackFactory.filter(F.action == "accept_order"))
@@ -127,10 +130,9 @@ async def test_start(message: Message, state: FSMContext):
     await bot2.send_message(user_id, "Ваша заявка прийнята")
     await state.clear()
 
-
-@seller_router.message(commands=["end"])
-async def user_start(message: Message, state: FSMContext):
-    user_id = message.from_user.id
+@seller_router.callback_query(lambda c: c.data == 'endsellar')
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
     await bot.send_message(user_id,f'Введіть id замовлення')
     await state.set_state(end_order.id)
     
@@ -139,10 +141,22 @@ async def user_start(message: Message, state: FSMContext):
 async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
-    await state.update_data(id=int(text))
-    btn = choose_action()
-    await bot.send_message(user_id,f'Оберіть дію',reply_markup=btn.as_markup(resize_keyboard=True))
-    await state.set_state(end_order.action)
+    try:
+        cur.execute("select * from orders where id = %s",(int(text),))
+        order = cur.fetchone()
+        if order:
+            await state.update_data(id=int(text))
+            btn = choose_action()
+            await bot.send_message(user_id,f'Оберіть дію',reply_markup=btn.as_markup(resize_keyboard=True))
+            await state.set_state(end_order.action)
+        else:
+            await bot.send_message(user_id,f'Такого замовлення не знайдено')
+            btn = homeS_button()
+            await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+    except:
+        await bot.send_message(user_id,f'Невірний формат id')
+        btn = homeS_button()
+        await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
 
 @seller_router.message_handler(content_types=types.ContentType.TEXT, state=end_order.action)
 async def test_start(message: Message, state: FSMContext):

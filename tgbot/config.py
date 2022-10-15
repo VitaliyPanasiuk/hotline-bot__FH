@@ -44,10 +44,10 @@ def load_config(path: str = None):
             use_redis=False,
         ),
         db=DbConfig(
-            host='ec2-34-247-72-29.eu-west-1.compute.amazonaws.com',
-            password='19c1ab0ac0a25af3f00e91eeb3444e14386c258d63a3c5aeab688246acae56d7',
-            user='upzuewwgtntlzy',
-            database='dcgpjdnnh9jcc1',
+            host='localhost',
+            password='2545',
+            user='hotline_user',
+            database='hotline',
             db_uri = ''
         ),
         misc=Miscellaneous()

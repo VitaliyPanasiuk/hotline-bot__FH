@@ -14,7 +14,7 @@ from tgbot.misc.states import reg_user,make_req,end_order
 from tgbot.misc.functions import auf,mailing_sellers
 
 from tgbot.keyboards.textBtn import choose_cat_button
-from tgbot.keyboards.inlineBtn import choose_delivery_button,accept_order_buyer_btn
+from tgbot.keyboards.inlineBtn import choose_delivery_button,accept_order_buyer_btn,homeB_button
 from tgbot.keyboards.inlineBtn import SellersCallbackFactory
 
 
@@ -49,10 +49,11 @@ async def user_start(message: Message, state: FSMContext):
     print(auf_user)
     if not auf_user:
         await message.reply("Привіт!")
-        await bot.send_message(user_id, "Відправ мені своє ім'я")
+        await bot.send_message(user_id, "Відправте своє ім'я")
         await state.set_state(reg_user.name)
     else:
-        await message.reply("Привіт!")
+        btn = homeB_button()
+        await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
 
 
 @user_router.message_handler(content_types=types.ContentType.TEXT, state=reg_user.name)
@@ -60,7 +61,7 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(name=text)
-    await bot.send_message(user_id, "Відправ мені свой номер телефону")
+    await bot.send_message(user_id, "Відправте свій номер телефону")
     await state.set_state(reg_user.phone)
 
 
@@ -74,12 +75,13 @@ async def test_start(message: Message, state: FSMContext):
                 (user_id, data['name'], data['phone'],[]))
     base.commit()
     await bot.send_message(user_id, "Ви зареєстровані")
+    btn = homeB_button()
+    await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
     await state.clear()
 
-
-@user_router.message(commands=["buy"])
-async def user_start(message: Message, state: FSMContext):
-    await message.reply("Привіт!\nВведіть назву товару")
+@user_router.callback_query(lambda c: c.data == 'buy')
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    await bot.send_message(callback_query.from_user.id, "Привіт!\nВведіть назву товару ")
     await state.set_state(make_req.name)
     
 @user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.name)
@@ -204,7 +206,7 @@ async def user_start(callback_query: types.CallbackQuery, callback_data: Sellers
         cur.execute("UPDATE orders SET seller_id = %s, price = %s, seller_term = %s, seller_com = %s,status = 'in progress' WHERE id = %s",(seller_id,price,term,com,order_id))
         base.commit()
 
-        await bot.send_message(user_id,f'Чудово ви обрали продавця\nid замовлення: {order_id}\nДля завершення замовлення введіть команду /end\nОЦІНЮЙТЕ ПРОДАВЦЯ ЛИШЕ ПІСЛЯ ОТРИМАНИХ ПОСЛУГ!')
+        await bot.send_message(user_id,f'Чудово ви обрали продавця\nid замовлення: {order_id}\nДля завершення замовлення натисніть кнопку "завершити замовлення" у головному меню')
         cur.execute('''SELECT sellers
                             FROM orders
                                 WHERE id = %s
@@ -219,7 +221,7 @@ async def user_start(callback_query: types.CallbackQuery, callback_data: Sellers
             if seller != seller_id:
                 await bot2.send_message(seller,f'Покупець відхил ваше замовлення\nid замовлення: {order_id}')
             else:
-                await bot2.send_message(seller,f'Покупець прийняв ваше\nid замовлення: {order_id}\nНомер телефону покупця: {user_phone[0]}\nДля завершення замовлення введіть команду /end\nОЦІНЮЙТЕ ПОКУПЦЯ ЛИШЕ ПІСЛЯ ОТРИМАНИХ ПОСЛУГ!')
+                await bot2.send_message(seller,f'Покупець прийняв ваше\nid замовлення: {order_id}\nНомер телефону покупця: {user_phone[0]}\nДля завершення замовлення натисніть кнопку "завершити замовлення" у головному меню')
         
 @user_router.callback_query(lambda c: c.data == 'nova_pochta')
 async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
@@ -269,9 +271,9 @@ async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
     btn = choose_delivery_button(arr[0])
     await callback_query.message.edit_text('Вкажіть бажаний спосіб доставки',reply_markup=btn.as_markup(),parse_mode="HTML")
 
-@user_router.message(commands=["end"])
-async def user_start(message: Message, state: FSMContext):
-    user_id = message.from_user.id
+@user_router.callback_query(lambda c: c.data == 'end')
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
     await bot.send_message(user_id,f'Введіть id замовлення')
     await state.set_state(end_order.id)
     
@@ -280,9 +282,21 @@ async def user_start(message: Message, state: FSMContext):
 async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
-    await state.update_data(id=int(text))
-    await bot.send_message(user_id,f'Введіть бал, який буде поставленно продавцю')
-    await state.set_state(end_order.rate)
+    try:
+        cur.execute("select * from orders where id = %s",(int(text),))
+        order = cur.fetchone()
+        if order:
+            await state.update_data(id=int(text))
+            await bot.send_message(user_id,f'Введіть бал, який буде поставленно продавцю')
+            await state.set_state(end_order.rate)
+        else:
+            await bot.send_message(user_id,f'Такого замовлення не знайдено')
+            btn = homeB_button()
+            await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+    except:
+        await bot.send_message(user_id,f'Невірний формат id')
+        btn = homeB_button()
+        await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
 
 
 @user_router.message_handler(content_types=types.ContentType.TEXT, state=end_order.rate)
@@ -291,7 +305,7 @@ async def test_start(message: Message, state: FSMContext):
     text = message.text
     await state.update_data(rate=int(text))
     data = await state.get_data()
-    cur.execute("select seller_id from orders where id = %s",(data['id']))
+    cur.execute("select seller_id from orders where id = %s",(data['id'],))
     seller_id = cur.execute()
     cur.execute("update sellers set rating = rating + %s /2 where id = %s",(data['rate'],seller_id[0]))
     base.commit()

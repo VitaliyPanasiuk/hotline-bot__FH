@@ -12,7 +12,24 @@ class SellersCallbackFactory(CallbackData, prefix="fabnum"):
     com: Optional[str]
 
 
-
+def homeB_button():
+    example = InlineKeyboardBuilder()
+    example.row(types.InlineKeyboardButton(
+        text=f'Почати пошук',
+        callback_data='buy'
+    ))
+    example.row(types.InlineKeyboardButton(
+        text=f'Закрити замовлення',
+        callback_data='end'
+    ))
+    return example
+def homeS_button():
+    example = InlineKeyboardBuilder()
+    example.row(types.InlineKeyboardButton(
+        text=f'Закрити замовлення',
+        callback_data='endsellar'
+    ))
+    return example
 
 def choose_delivery_button(arr):
     example = InlineKeyboardBuilder()
