@@ -38,15 +38,15 @@ def load_config(path: str = None):
 
     return Config(
         tg_bot=TgBot(
-            token="5712958832:AAFLsIoReuYVMIvtpBcdXoiXzkslpGg2A-g",
-            token2="5622869921:AAGHd7pFRiuP3OilQmWUUfPweoVtyFSomb4",
+            token="5257942822:AAFqBBqGZs6UJZsF3fJ6fY-f8pCFQelxXRw",
+            token2="5411810705:AAFVmiB1l4KbCJ7zI_U-z_hULE9t2fyt9xQ",
             admin_ids=(),
             use_redis=False,
         ),
         db=DbConfig(
             host='localhost',
-            password='2545',
-            user='hotline_user',
+            password='27052004',
+            user='postgres',
             database='hotline',
             db_uri = ''
         ),

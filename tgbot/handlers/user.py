@@ -14,7 +14,7 @@ from tgbot.misc.states import reg_user,make_req,end_order
 from tgbot.misc.functions import auf,mailing_sellers
 
 from tgbot.keyboards.textBtn import choose_cat_button
-from tgbot.keyboards.inlineBtn import choose_delivery_button,accept_order_buyer_btn,homeB_button
+from tgbot.keyboards.inlineBtn import choose_delivery_button,accept_order_buyer_btn,homeB_button,choose_payment_button
 from tgbot.keyboards.inlineBtn import SellersCallbackFactory
 
 
@@ -109,10 +109,10 @@ async def test_start(message: Message, state: FSMContext):
             categories.append(p)
             
         btn = choose_cat_button(categories)
-        await bot.send_message(user_id, "Оберіть потрібну категорію",reply_markup=btn.as_markup(resize_keyboard=True))
+        await bot.send_message(user_id, "Оберіть категорію, що найбільше відповідає запитуваному товару",reply_markup=btn.as_markup(resize_keyboard=True))
         await state.set_state(make_req.cat)
     except:
-        await bot.send_message(user_id, "Товару не знайдено, перевірьте вірність написання та введіть його знову",reply_markup=types.ReplyKeyboardRemove())
+        await bot.send_message(user_id, "Я не зміг встановити категорію товару, будь ласка, вкажіть бренд товару, а його модель вкажіть в додаткових коментарях",reply_markup=types.ReplyKeyboardRemove())
         await state.set_state(make_req.name)
         
 @user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.cat)
@@ -128,7 +128,7 @@ async def test_start(message: Message, state: FSMContext):
         btn = choose_delivery_button([])
         
     await bot.send_message(user_id, "Чудово!",reply_markup=types.ReplyKeyboardRemove())
-    await bot.send_message(user_id, "Вкажіть бажаний спосіб доставки",reply_markup=btn.as_markup())
+    await bot.send_message(user_id, "Вкажіть бажаний спосіб доставки (можна обрати декілька)",reply_markup=btn.as_markup())
     
 
 @user_router.callback_query(lambda c: c.data == 'deliveri_done', state=make_req)
@@ -136,11 +136,29 @@ async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
     user_id = callback_query.from_user.id
     cur.execute("SELECT delivery FROM buyers WHERE id = %s",(str(user_id),))
     deliveri = cur.fetchone()
-    s = ''.join(deliveri[0])
+    s = ' '.join(deliveri[0])
     await state.update_data(delivers=s)
+    cur.execute("select payment from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    if arr[0]:
+        btn = choose_payment_button(arr[0])
+    else:
+        btn = choose_payment_button([])
+    await bot.send_message(user_id, "Вкажіть бажаний спосіб оплати (можна обрати декілька)",reply_markup=btn.as_markup())
+    
+
+@user_router.callback_query(lambda c: c.data == 'payment_done', state=make_req)
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
+    cur.execute("SELECT payment FROM buyers WHERE id = %s",(str(user_id),))
+    payment = cur.fetchone()
+    s = ' '.join(payment[0])
+    await state.update_data(payment=s)
     await bot.send_message(user_id, "Чудово, вкажіть своє місто",reply_markup=types.ReplyKeyboardRemove())
     await state.set_state(make_req.city)
-    
+
+
+
 @user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.city)
 async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
@@ -154,13 +172,13 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(comment=text)
-    await bot.send_message(user_id, "Чудово, ваше замовлення прийняте",reply_markup=types.ReplyKeyboardRemove())
+    await bot.send_message(user_id, "Чудово, ваше замовлення прийнято, очікуйте цінових пропозицій від продавців!»",reply_markup=types.ReplyKeyboardRemove())
     data = await state.get_data()
     id = randint(1,999999)
     now = datetime.datetime.now()
     valid_time = now + datetime.timedelta(minutes=15)
-    cur.execute("INSERT INTO orders (id,buyer_id, name, category,min_max,delivery,city,buyer_com,valid_time) VALUES (%s,%s,%s, %s, %s, %s, %s, %s,%s)",
-                (id,str(user_id), data['name'], data['cat'], data['min_max'], data['delivers'],data['city'], data['comment'],valid_time))
+    cur.execute("INSERT INTO orders (id,buyer_id, name, category,min_max,delivery,city,buyer_com,valid_time,payment) VALUES (%s,%s,%s, %s, %s, %s, %s, %s,%s,%s)",
+                (id,str(user_id), data['name'], data['cat'], data['min_max'], data['delivers'],data['city'], data['comment'],valid_time,data['payment']))
     base.commit()
     cur.execute("SELECT rating FROM buyers WHERE id = %s",(str(user_id),))
     rate = cur.fetchone()
@@ -177,13 +195,13 @@ async def test_start(message: Message, state: FSMContext):
     if order[0]:
         for i in range(len(order[0])):
             cur.execute("SELECT rating FROM sellers WHERE id = %s",(order[0][i],))
-            rate = cur.fetchall()
+            rate = cur.fetchone()
             btn = accept_order_buyer_btn(str(order[0][i]),str(order[1][i]),str(order[2][i]),str(order[3][i]),id)
             message = f'''
-    Рейтинг: {str(rate)}
-    Ціна: {str(order[1][i])}
-    Додаткові умови: {str(order[2][i])}
-    Коментар: {str(order[3][i])}     
+Рейтинг: {str(rate[0])}
+Ціна: {str(order[1][i])}
+Додаткові умови: {str(order[2][i])}
+Коментар: {str(order[3][i])}     
             '''
             await bot.send_message(user_id,message,reply_markup=btn.as_markup(resize_keyboard=True))
 
@@ -207,6 +225,8 @@ async def user_start(callback_query: types.CallbackQuery, callback_data: Sellers
         base.commit()
 
         await bot.send_message(user_id,f'Чудово ви обрали продавця\nid замовлення: {order_id}\nДля завершення замовлення натисніть кнопку "завершити замовлення" у головному меню')
+        btn = homeB_button()
+        await bot.send_message(user_id, "Привіт, "+ callback_query.from_user.first_name,reply_markup=btn.as_markup())
         cur.execute('''SELECT sellers
                             FROM orders
                                 WHERE id = %s
@@ -237,7 +257,7 @@ async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
     cur.execute("select delivery from buyers where id = %s",(str(user_id),))
     arr = cur.fetchone()
     btn = choose_delivery_button(arr[0])
-    await callback_query.message.edit_text('Вкажіть бажаний спосіб доставки',reply_markup=btn.as_markup(),parse_mode="HTML")
+    await callback_query.message.edit_text('Вкажіть бажаний спосіб доставки (можна обрати декілька)',reply_markup=btn.as_markup(),parse_mode="HTML")
 
 @user_router.callback_query(lambda c: c.data == 'nalp')
 async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
@@ -253,7 +273,7 @@ async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
     cur.execute("select delivery from buyers where id = %s",(str(user_id),))
     arr = cur.fetchone()
     btn = choose_delivery_button(arr[0])
-    await callback_query.message.edit_text('Вкажіть бажаний спосіб доставки',reply_markup=btn.as_markup(),parse_mode="HTML")
+    await callback_query.message.edit_text('Вкажіть бажаний спосіб доставки (можна обрати декілька)',reply_markup=btn.as_markup(),parse_mode="HTML")
 
 @user_router.callback_query(lambda c: c.data == 'ukr_pochta')
 async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
@@ -269,7 +289,55 @@ async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
     cur.execute("select delivery from buyers where id = %s",(str(user_id),))
     arr = cur.fetchone()
     btn = choose_delivery_button(arr[0])
-    await callback_query.message.edit_text('Вкажіть бажаний спосіб доставки',reply_markup=btn.as_markup(),parse_mode="HTML")
+    await callback_query.message.edit_text('Вкажіть бажаний спосіб доставки (можна обрати декілька)',reply_markup=btn.as_markup(),parse_mode="HTML")
+
+@user_router.callback_query(lambda c: c.data == 'del')
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
+    cur.execute("select delivery from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    if 'del' in arr[0]:
+        cur.execute("update buyers set delivery = array_remove(delivery, 'del') where id = %s",(str(user_id),))
+        base.commit()
+    else:
+        cur.execute("update buyers set delivery = delivery || ARRAY['del'] where id = %s",(str(user_id),))
+        base.commit()
+    cur.execute("select delivery from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    btn = choose_delivery_button(arr[0])
+    await callback_query.message.edit_text('Вкажіть бажаний спосіб доставки (можна обрати декілька)',reply_markup=btn.as_markup(),parse_mode="HTML")
+
+@user_router.callback_query(lambda c: c.data == 'mist')
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
+    cur.execute("select delivery from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    if 'mist' in arr[0]:
+        cur.execute("update buyers set delivery = array_remove(delivery, 'mist') where id = %s",(str(user_id),))
+        base.commit()
+    else:
+        cur.execute("update buyers set delivery = delivery || ARRAY['mist'] where id = %s",(str(user_id),))
+        base.commit()
+    cur.execute("select delivery from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    btn = choose_delivery_button(arr[0])
+    await callback_query.message.edit_text('Вкажіть бажаний спосіб доставки (можна обрати декілька)',reply_markup=btn.as_markup(),parse_mode="HTML")
+
+@user_router.callback_query(lambda c: c.data == 'samo')
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
+    cur.execute("select delivery from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    if 'samo' in arr[0]:
+        cur.execute("update buyers set delivery = array_remove(delivery, 'samo') where id = %s",(str(user_id),))
+        base.commit()
+    else:
+        cur.execute("update buyers set delivery = delivery || ARRAY['samo'] where id = %s",(str(user_id),))
+        base.commit()
+    cur.execute("select delivery from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    btn = choose_delivery_button(arr[0])
+    await callback_query.message.edit_text('Вкажіть бажаний спосіб доставки (можна обрати декілька)',reply_markup=btn.as_markup(),parse_mode="HTML")
 
 @user_router.callback_query(lambda c: c.data == 'end')
 async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
@@ -306,7 +374,7 @@ async def test_start(message: Message, state: FSMContext):
     await state.update_data(rate=int(text))
     data = await state.get_data()
     cur.execute("select seller_id from orders where id = %s",(data['id'],))
-    seller_id = cur.execute()
+    seller_id = cur.fetchone()
     cur.execute("update sellers set rating = rating + %s /2 where id = %s",(data['rate'],seller_id[0]))
     base.commit()
     await bot.send_message(user_id,f'Чудово, замовлення закрито')

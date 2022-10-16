@@ -52,15 +52,16 @@ async def mailing_sellers(name,category,min_max,rate,comment,id,city,delivery):
     sellers = cur.fetchall()
     print('start send messages to sellers')
     for seller in sellers:
-        if category in seller[3]:
+        print(seller)
+        if seller[3] and category in seller[3]:
             message = f'''
-    Товар: {name}
-    Категорія: {category}
-    Місто: {city}
-    Доставка: {delivery}
-    мін-макс ціна: {min_max}
-    Коментар: {comment}
-    Рейтинг покупця: {rate}
+Товар: {name}
+Категорія: {category}
+Місто: {city}
+Доставка: {delivery}
+мін-макс ціна: {min_max}
+Коментар: {comment}
+Рейтинг покупця: {rate[0]}
             '''
             btn = accept_order_btn(id)
             await bot2.send_message(seller[0],message,reply_markup=btn.as_markup())

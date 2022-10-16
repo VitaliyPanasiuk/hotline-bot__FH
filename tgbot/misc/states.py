@@ -26,5 +26,6 @@ class make_req(StatesGroup):
     cat = State()
     min_max = State()
     delivers = State()
+    payment = State()
     city = State()
     comment = State()

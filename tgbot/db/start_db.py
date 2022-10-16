@@ -16,7 +16,8 @@ async def postgre_start():
     name     text,
     rating   integer default 0,
     phone    text,
-    delivery text[]
+    delivery text[],
+    payment text[]
 );
 
 create table if not exists sellers
@@ -50,6 +51,7 @@ create table if not exists orders
     category         text,
     min_max          text,
     delivery         text,
+    payment          text,
     city             text,
     buyer_com        text,
     status           text default 'in search',

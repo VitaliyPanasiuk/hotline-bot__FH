@@ -34,20 +34,56 @@ def homeS_button():
 def choose_delivery_button(arr):
     example = InlineKeyboardBuilder()
     example.row(types.InlineKeyboardButton(
-        text=f'Новая почта {"🟢" if "nova_pochta" in arr else "🔴"}',
+        text=f'Нова Пошта {"🟢" if "nova_pochta" in arr else "🔴"}',
         callback_data='nova_pochta'
     ))
     example.row(types.InlineKeyboardButton(
-        text=f'Наложеный платеж {"🟢" if "nalp" in arr else "🔴"}',
+        text=f'САТ {"🟢" if "nalp" in arr else "🔴"}',
         callback_data='nalp'
     ))
     example.row(types.InlineKeyboardButton(
-        text=f'Укр почта {"🟢" if "ukr_pochta" in arr else "🔴"}',
+        text=f'Укрпошта {"🟢" if "ukr_pochta" in arr else "🔴"}',
         callback_data='ukr_pochta'
+    ))
+    example.row(types.InlineKeyboardButton(
+        text=f'Делівері {"🟢" if "del" in arr else "🔴"}',
+        callback_data='del'
+    ))
+    example.row(types.InlineKeyboardButton(
+        text=f'Міст {"🟢" if "mist" in arr else "🔴"}',
+        callback_data='mist'
+    ))
+    example.row(types.InlineKeyboardButton(
+        text=f'Самовивіз {"🟢" if "samo" in arr else "🔴"}',
+        callback_data='samo'
     ))
     example.row(types.InlineKeyboardButton(
         text=f'Готово ✅',
         callback_data='deliveri_done'
+    ))
+    return example
+
+def choose_payment_button(arr):
+    example = InlineKeyboardBuilder()
+    example.row(types.InlineKeyboardButton(
+        text=f'Накладений платіж {"🟢" if "nak" in arr else "🔴"}',
+        callback_data='nak'
+    ))
+    example.row(types.InlineKeyboardButton(
+        text=f'Передплата на картку {"🟢" if "pred" in arr else "🔴"}',
+        callback_data='pred'
+    ))
+    example.row(types.InlineKeyboardButton(
+        text=f'Безготівкова без ПДВ  {"🟢" if "card" in arr else "🔴"}',
+        callback_data='card'
+    ))
+    example.row(types.InlineKeyboardButton(
+        text=f'Безготівкова з ПДВ  {"🟢" if "card_pdv" in arr else "🔴"}',
+        callback_data='card_pdv'
+    ))
+    example.row(types.InlineKeyboardButton(
+        text=f'Готово ✅',
+        callback_data='payment_done'
     ))
     return example
 
