@@ -45,7 +45,7 @@ def load_config(path: str = None):
         ),
         db=DbConfig(
             host='localhost',
-            password='27052004',
+            password='2545',
             user='postgres',
             database='hotline',
             db_uri = ''

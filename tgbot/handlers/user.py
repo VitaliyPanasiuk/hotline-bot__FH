@@ -71,8 +71,8 @@ async def test_start(message: Message, state: FSMContext):
     text = message.text
     await state.update_data(phone=text)
     data = await state.get_data()
-    cur.execute("INSERT INTO buyers (id, name, phone,delivery) VALUES (%s, %s, %s, %s)",
-                (user_id, data['name'], data['phone'],[]))
+    cur.execute("INSERT INTO buyers (id, name, phone,delivery,payment) VALUES (%s, %s, %s, %s, %s)",
+                (user_id, data['name'], data['phone'],[],[]))
     base.commit()
     await bot.send_message(user_id, "Ви зареєстровані")
     btn = homeB_button()
@@ -146,14 +146,82 @@ async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
         btn = choose_payment_button([])
     await bot.send_message(user_id, "Вкажіть бажаний спосіб оплати (можна обрати декілька)",reply_markup=btn.as_markup())
     
+@user_router.callback_query(lambda c: c.data == 'nak')
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
+    cur.execute("select payment from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    if 'nak' in arr[0]:
+        cur.execute("update buyers set payment = array_remove(payment, 'nak') where id = %s",(str(user_id),))
+        base.commit()
+    else:
+        cur.execute("update buyers set payment = payment || ARRAY['nak'] where id = %s",(str(user_id),))
+        base.commit()
+    cur.execute("select payment from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    btn = choose_payment_button(arr[0])
+    await callback_query.message.edit_text('Вкажіть бажаний спосіб оплати (можна обрати декілька)',reply_markup=btn.as_markup(),parse_mode="HTML")
+
+@user_router.callback_query(lambda c: c.data == 'pred')
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
+    cur.execute("select payment from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    if 'pred' in arr[0]:
+        cur.execute("update buyers set payment = array_remove(payment, 'pred') where id = %s",(str(user_id),))
+        base.commit()
+    else:
+        cur.execute("update buyers set payment = payment || ARRAY['pred'] where id = %s",(str(user_id),))
+        base.commit()
+    cur.execute("select payment from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    btn = choose_payment_button(arr[0])
+    await callback_query.message.edit_text('Вкажіть бажаний спосіб оплати (можна обрати декілька)',reply_markup=btn.as_markup(),parse_mode="HTML")
+
+@user_router.callback_query(lambda c: c.data == 'card')
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
+    cur.execute("select payment from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    if 'card' in arr[0]:
+        cur.execute("update buyers set payment = array_remove(payment, 'card') where id = %s",(str(user_id),))
+        base.commit()
+    else:
+        cur.execute("update buyers set payment = payment || ARRAY['card'] where id = %s",(str(user_id),))
+        base.commit()
+    cur.execute("select payment from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    btn = choose_payment_button(arr[0])
+    await callback_query.message.edit_text('Вкажіть бажаний спосіб оплати (можна обрати декілька)',reply_markup=btn.as_markup(),parse_mode="HTML")
+    
+@user_router.callback_query(lambda c: c.data == 'card_pdv')
+async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+    user_id = callback_query.from_user.id
+    cur.execute("select payment from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    if 'card_pdv' in arr[0]:
+        cur.execute("update buyers set payment = array_remove(payment, 'card_pdv') where id = %s",(str(user_id),))
+        base.commit()
+    else:
+        cur.execute("update buyers set payment = payment || ARRAY['card_pdv'] where id = %s",(str(user_id),))
+        base.commit()
+    cur.execute("select payment from buyers where id = %s",(str(user_id),))
+    arr = cur.fetchone()
+    btn = choose_payment_button(arr[0])
+    await callback_query.message.edit_text('Вкажіть бажаний спосіб оплати (можна обрати декілька)',reply_markup=btn.as_markup(),parse_mode="HTML")
+    
 
 @user_router.callback_query(lambda c: c.data == 'payment_done', state=make_req)
 async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
     user_id = callback_query.from_user.id
     cur.execute("SELECT payment FROM buyers WHERE id = %s",(str(user_id),))
     payment = cur.fetchone()
-    s = ' '.join(payment[0])
-    await state.update_data(payment=s)
+    if payment and payment[0]:
+        s = ' '.join(payment[0])
+        await state.update_data(payment=s)
+    else:
+        await state.update_data(payment='')
+        
     await bot.send_message(user_id, "Чудово, вкажіть своє місто",reply_markup=types.ReplyKeyboardRemove())
     await state.set_state(make_req.city)
 
