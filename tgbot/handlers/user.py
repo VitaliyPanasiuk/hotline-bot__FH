@@ -281,7 +281,7 @@ async def test_start(message: Message, state: FSMContext):
     data = await state.get_data()
     id = randint(1,999999)
     now = datetime.datetime.now()
-    valid_time = now + datetime.timedelta(minutes=15)
+    valid_time = now + datetime.timedelta(minutes=10)
     cur.execute("INSERT INTO orders (id,buyer_id, name, category,min_max,delivery,city,buyer_com,valid_time,payment) VALUES (%s,%s,%s, %s, %s, %s, %s, %s,%s,%s)",
                 (id,str(user_id), data['name'], data['cat'], data['min_max'], data['delivers'],data['city'], data['comment'],valid_time,data['payment']))
     base.commit()
@@ -291,7 +291,7 @@ async def test_start(message: Message, state: FSMContext):
 
     await mailing_sellers(data['name'], data['cat'], data['min_max'],buyer_rating,data['comment'],id,data['city'], data['delivers'])
     # TODO: change timer to 900
-    await asyncio.sleep(20)
+    await asyncio.sleep(900)
     print('end of await answers from sellers')
     await bot.delete_message(chat_id = message.chat.id ,message_id = message.message_id + 1)
     cur.execute('''SELECT sellers,prices,seller_terms,seller_coms
