@@ -94,6 +94,9 @@ def accept_order_btn(order):
     builder.button(
         text="Прийняти", callback_data=SellersCallbackFactory(action="accept_order", order_id=int(order))
     )
+    builder.button(
+        text="Відхилити", callback_data=SellersCallbackFactory(action="delete_order", order_id=int(order))
+    )
     return builder
 
 def accept_order_buyer_btn(seller_id,order_price,order_term,order_com,order_id):

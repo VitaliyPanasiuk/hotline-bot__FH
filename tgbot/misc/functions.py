@@ -16,6 +16,7 @@ import gspread
 import datetime
 import asyncio
 import json
+import numpy as np
 
 class GoogleSheets:
     def __init__(self, filename, google_sheet_name):
@@ -28,6 +29,27 @@ bot2 = Bot(token=config.tg_bot.token2, parse_mode='HTML')
 
 base = psycopg2.connect(dbname=config.db.database, user=config.db.user, password=config.db.password,host=config.db.host)
 cur = base.cursor()
+
+async def rating(method,user,user_id,rate):
+    answer = ''
+    if method == 'get':
+        if user == 'buyer':
+            cur.execute("SELECT rating FROM buyers WHERE id = %s", (str(user_id),))
+            rating = cur.fetchone()[0]
+        elif user == 'seller':
+            cur.execute("SELECT rating FROM sellers WHERE id = %s", (str(user_id),))
+            rating = cur.fetchone()[0]
+        answer = np.average(rating)
+    elif method == 'update':
+        if user == 'buyer':
+            cur.execute("UPDATE buyers set rating = array_append(rating, %s) where id = %s",(rate,str(user_id)))
+            base.commit()
+        elif user == 'seller':
+            print(rate)
+            print(user_id)
+            cur.execute("UPDATE sellers set rating = array_append(rating, %s) where id = %s",(rate,str(user_id)))
+            base.commit()
+    return answer 
 
 
 async def auf(type, user_id):
@@ -61,7 +83,7 @@ async def mailing_sellers(name,category,min_max,rate,comment,id,city,delivery):
 Доставка: {delivery}
 мін-макс ціна: {min_max}
 Коментар: {comment}
-Рейтинг покупця: {rate[0]}
+Рейтинг покупця: {str(rate)}
             '''
             btn = accept_order_btn(id)
             await bot2.send_message(seller[0],message,reply_markup=btn.as_markup())
@@ -90,5 +112,7 @@ async def update_category():
         await asyncio.sleep(300)
 
 
+        
+            
 
 

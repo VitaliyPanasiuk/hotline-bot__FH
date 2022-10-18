@@ -14,7 +14,7 @@ async def postgre_start():
 (
     id       text not null,
     name     text,
-    rating   integer default 0,
+    rating   integer[],
     phone    text,
     delivery text[],
     payment text[]
@@ -30,7 +30,7 @@ create table if not exists sellers
     category     text[],
     email     text,
     phone        text,
-    rating       integer default 0,
+    rating       integer[],
     person_phone text
 );
 
