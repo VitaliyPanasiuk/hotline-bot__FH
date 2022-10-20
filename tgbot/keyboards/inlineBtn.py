@@ -18,18 +18,18 @@ def homeB_button():
         text=f'Почати пошук',
         callback_data='buy'
     ))
-    example.row(types.InlineKeyboardButton(
-        text=f'Закрити замовлення',
-        callback_data='end'
-    ))
+    # example.row(types.InlineKeyboardButton(
+    #     text=f'Закрити замовлення',
+    #     callback_data='end'
+    # ))
     return example
-def homeS_button():
-    example = InlineKeyboardBuilder()
-    example.row(types.InlineKeyboardButton(
-        text=f'Закрити замовлення',
-        callback_data='endsellar'
-    ))
-    return example
+
+def end_button(order):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text="Закрити замовлення", callback_data=SellersCallbackFactory(action="end_order", order_id=int(order))
+    )
+    return builder
 
 def choose_delivery_button(arr):
     example = InlineKeyboardBuilder()
@@ -89,8 +89,6 @@ def choose_payment_button(arr):
 
 def accept_order_btn(order):
     builder = InlineKeyboardBuilder()
-    print(order)
-    print(type(order))
     builder.button(
         text="Прийняти", callback_data=SellersCallbackFactory(action="accept_order", order_id=int(order))
     )

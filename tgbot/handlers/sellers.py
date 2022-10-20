@@ -16,7 +16,7 @@ from tgbot.misc.states import reg_user,make_req,accept_ord,end_order
 from tgbot.misc.functions import auf,rating
 
 from tgbot.keyboards.textBtn import choose_cat_button,choose_action
-from tgbot.keyboards.inlineBtn import choose_delivery_button,homeS_button
+from tgbot.keyboards.inlineBtn import choose_delivery_button,end_button
 from tgbot.keyboards.inlineBtn import SellersCallbackFactory
 
 import datetime
@@ -50,8 +50,9 @@ async def user_start(message: Message, state: FSMContext):
         await bot2.send_message(user_id, "Відправте своє ім'я або назву компанії")
         await state.set_state(reg_user.name)
     else:
-        btn = homeS_button()
-        await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+        # btn = homeS_button()
+        # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+        await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name)
 
 
 @seller_router.message_handler(content_types=types.ContentType.TEXT, state=reg_user.name)
@@ -98,8 +99,8 @@ async def test_start(message: Message, state: FSMContext):
     base.commit()
     await bot2.send_message(user_id, "Ви зареєстровані")
     await bot2.send_message(user_id, "Будь ласка, заповніть анкету та укажіть в ній усі цільові категорії товарів\послуг , що ви продаєте\надаєте!\nВкажіть email, котрий ви вказували при регістрації у боті\nhttps://forms.gle/BQAgbumLSM34cNv69")
-    btn = homeS_button()
-    await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+    # btn = homeS_button()
+    # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
 
 
 @seller_router.callback_query(SellersCallbackFactory.filter(F.action == "accept_order"))
@@ -157,47 +158,59 @@ async def test_start(message: Message, state: FSMContext):
     
     cur.execute("UPDATE orders SET sellers = sellers || ARRAY[%s], prices = prices || ARRAY[%s], seller_terms = seller_terms || ARRAY[%s], seller_coms = seller_coms || ARRAY[%s] WHERE id = %s",(str(data['seller_id']),str(data['price']),data['terms'],data['comment'],data['id']))
     base.commit()
-    btn = homeS_button()
-    await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+    # btn = homeS_button()
+    # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
     msg = await bot2.send_message(user_id,"Ваша заявка прийнята")
     asyncio.create_task(delete_message(msg, 5))
     await state.clear()
 
-@seller_router.callback_query(lambda c: c.data == 'endsellar')
-async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
-    user_id = callback_query.from_user.id
-    await bot2.send_message(user_id,f'Введіть id замовлення')
-    await state.set_state(end_order.id)
+# @seller_router.callback_query(lambda c: c.data == 'endsellar')
+# async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
+#     user_id = callback_query.from_user.id
+#     await bot2.send_message(user_id,f'Введіть id замовлення')
+#     await state.set_state(end_order.id)
     
 
-@seller_router.message_handler(content_types=types.ContentType.TEXT, state=end_order.id)
-async def test_start(message: Message, state: FSMContext):
-    user_id = message.from_user.id
-    text = message.text
-    try:
-        cur.execute("select * from orders where id = %s",(int(text),))
-        order = cur.fetchone()
-        if order:
-            await state.update_data(id=int(text))
-            await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
-            await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
-            btn = choose_action()
-            await bot2.send_message(user_id,f'Оберіть дію',reply_markup=btn.as_markup(resize_keyboard=True))
-            await state.set_state(end_order.action)
-        else:
-            await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
-            await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
-            btn = homeS_button()
-            await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
-            msg = await bot2.send_message(user_id,"Такого замовлення не знайдено")
-            asyncio.create_task(delete_message(msg, 5))
-    except:
-        await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
-        await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
-        btn = homeS_button()
-        await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
-        msg = await bot2.send_message(user_id,"Невірний формат id")
-        asyncio.create_task(delete_message(msg, 5))
+# @seller_router.message_handler(content_types=types.ContentType.TEXT, state=end_order.id)
+# async def test_start(message: Message, state: FSMContext):
+#     user_id = message.from_user.id
+#     text = message.text
+#     try:
+#         cur.execute("select * from orders where id = %s",(int(text),))
+#         order = cur.fetchone()
+#         if order:
+#             await state.update_data(id=int(text))
+#             await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
+#             await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
+#             btn = choose_action()
+#             await bot2.send_message(user_id,f'Оберіть дію',reply_markup=btn.as_markup(resize_keyboard=True))
+#             await state.set_state(end_order.action)
+#         else:
+#             await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
+#             await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
+#             btn = homeS_button()
+#             # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+#             msg = await bot2.send_message(user_id,"Такого замовлення не знайдено")
+#             asyncio.create_task(delete_message(msg, 5))
+#     except:
+#         await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
+#         await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
+#         btn = homeS_button()
+#         # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+#         msg = await bot2.send_message(user_id,"Невірний формат id")
+#         asyncio.create_task(delete_message(msg, 5))
+
+
+@seller_router.callback_query(SellersCallbackFactory.filter(F.action == "end_order"))
+async def user_start(callback_query: types.CallbackQuery, callback_data: SellersCallbackFactory, state: FSMContext):
+    user_id = callback_query.from_user.id
+    order_id = callback_data.order_id
+    await callback_query.message.delete()
+    await state.update_data(id=int(order_id))
+    btn = choose_action()
+    await bot2.send_message(user_id,f'Оберіть дію',reply_markup=btn.as_markup(resize_keyboard=True))
+    await state.set_state(end_order.action)
+
 
 @seller_router.message_handler(content_types=types.ContentType.TEXT, state=end_order.action)
 async def test_start(message: Message, state: FSMContext):
@@ -206,21 +219,21 @@ async def test_start(message: Message, state: FSMContext):
     data = await state.get_data()
     await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
     await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
-    btn = homeS_button()
+    # btn = homeS_button()
     if text == 'Підтвердити виконання':
-        await bot2.send_message(user_id,f'Введіть бал, який буде поставленно покупцю',reply_markup=types.ReplyKeyboardRemove())
+        await bot2.send_message(user_id,f'Введіть бал, який буде поставленно покупцю(від 1 до 10)',reply_markup=types.ReplyKeyboardRemove())
         await state.set_state(end_order.action)
     elif text == 'Скарга':
         cur.execute("select buyer_id from orders where id = %s",(data['id'],))
         buyer_id = cur.fetchone()
         cur.execute("update buyers set rating = rating - 1 where id = %s",(buyer_id[0],))
         base.commit()
-        await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+        # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
         
         msg = await bot2.send_message(user_id,"Скаргу було надіслано")
         asyncio.create_task(delete_message(msg, 5))
     elif text == 'Відмінити замовлення':
-        await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+        # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
         
         msg = await bot2.send_message(user_id,"Замовлення було відмінено")
         asyncio.create_task(delete_message(msg, 5))
@@ -230,7 +243,7 @@ async def test_start(message: Message, state: FSMContext):
 async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
-    btn = homeS_button()
+    # btn = homeS_button()
     await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
     await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
     await state.update_data(rate=int(text))
@@ -241,7 +254,7 @@ async def test_start(message: Message, state: FSMContext):
 
     await rating('update','buyer',buyer_id,data['rate'])
     
-    await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+    # await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
     msg = await bot.send_message(user_id,f'Чудово, замовлення закрито')
     asyncio.create_task(delete_message(msg, 5))
     
