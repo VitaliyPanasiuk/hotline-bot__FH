@@ -221,7 +221,7 @@ async def test_start(message: Message, state: FSMContext):
     await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
     # btn = homeS_button()
     if text == 'Підтвердити виконання':
-        await bot2.send_message(user_id,f'Введіть бал, який буде поставленно покупцю(від 1 до 10)',reply_markup=types.ReplyKeyboardRemove())
+        await bot2.send_message(user_id,f'Введіть бал, що буде поставленно покупцю(від 1 до 10)',reply_markup=types.ReplyKeyboardRemove())
         await state.set_state(end_order.action)
     elif text == 'Скарга':
         cur.execute("select buyer_id from orders where id = %s",(data['id'],))

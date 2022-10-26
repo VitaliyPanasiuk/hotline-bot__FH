@@ -55,6 +55,8 @@ create table if not exists orders
     city             text,
     buyer_com        text,
     status           text default 'in search',
+    st_b             boolean default false,
+    st_s             boolean default false,
     valid_time       timestamp
 );''')
     

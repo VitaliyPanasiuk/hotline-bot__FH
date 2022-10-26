@@ -45,8 +45,6 @@ async def rating(method,user,user_id,rate):
             cur.execute("UPDATE buyers set rating = array_append(rating, %s) where id = %s",(rate,str(user_id)))
             base.commit()
         elif user == 'seller':
-            print(rate)
-            print(user_id)
             cur.execute("UPDATE sellers set rating = array_append(rating, %s) where id = %s",(rate,str(user_id)))
             base.commit()
     return answer 
@@ -74,7 +72,6 @@ async def mailing_sellers(name,category,min_max,rate,comment,id,city,delivery):
     sellers = cur.fetchall()
     print('start send messages to sellers')
     for seller in sellers:
-        print(seller)
         if seller[3] and category in seller[3]:
             message = f'''
 Товар: {name}
