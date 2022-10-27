@@ -105,8 +105,7 @@ async def update_category():
                             cat.append(r)
                 cur.execute("UPDATE sellers SET category = %s WHERE email = %s",(cat,email))
                 base.commit()
-        # TODO: change timer to 60
-        await asyncio.sleep(60)
+        await asyncio.sleep(120)
 
 
         

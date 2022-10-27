@@ -57,7 +57,11 @@ create table if not exists orders
     status           text default 'in search',
     st_b             boolean default false,
     st_s             boolean default false,
-    valid_time       timestamp
+    valid_time       timestamp,
+    msg_b  text,
+    msg_s  text,
+    chat_b  text,
+    chat_s  text
 );''')
     
     

@@ -52,7 +52,9 @@ async def user_start(message: Message, state: FSMContext):
     else:
         # btn = homeS_button()
         # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
-        await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name)
+        cur.execute("SELECT name FROM sellers WHERE id=%s",(str(user_id),))
+        name = cur.fetchone()[0]
+        await bot2.send_message(user_id, "Привіт, "+ name)
 
 
 @seller_router.message_handler(content_types=types.ContentType.TEXT, state=reg_user.name)
@@ -164,42 +166,6 @@ async def test_start(message: Message, state: FSMContext):
     asyncio.create_task(delete_message(msg, 5))
     await state.clear()
 
-# @seller_router.callback_query(lambda c: c.data == 'endsellar')
-# async def user_start(callback_query: types.CallbackQuery, state = FSMContext):
-#     user_id = callback_query.from_user.id
-#     await bot2.send_message(user_id,f'Введіть id замовлення')
-#     await state.set_state(end_order.id)
-    
-
-# @seller_router.message_handler(content_types=types.ContentType.TEXT, state=end_order.id)
-# async def test_start(message: Message, state: FSMContext):
-#     user_id = message.from_user.id
-#     text = message.text
-#     try:
-#         cur.execute("select * from orders where id = %s",(int(text),))
-#         order = cur.fetchone()
-#         if order:
-#             await state.update_data(id=int(text))
-#             await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
-#             await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
-#             btn = choose_action()
-#             await bot2.send_message(user_id,f'Оберіть дію',reply_markup=btn.as_markup(resize_keyboard=True))
-#             await state.set_state(end_order.action)
-#         else:
-#             await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
-#             await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
-#             btn = homeS_button()
-#             # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
-#             msg = await bot2.send_message(user_id,"Такого замовлення не знайдено")
-#             asyncio.create_task(delete_message(msg, 5))
-#     except:
-#         await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id)
-#         await bot2.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
-#         btn = homeS_button()
-#         # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
-#         msg = await bot2.send_message(user_id,"Невірний формат id")
-#         asyncio.create_task(delete_message(msg, 5))
-
 
 @seller_router.callback_query(SellersCallbackFactory.filter(F.action == "end_order"))
 async def user_start(callback_query: types.CallbackQuery, callback_data: SellersCallbackFactory, state: FSMContext):
@@ -250,13 +216,37 @@ async def test_start(message: Message, state: FSMContext):
     data = await state.get_data()
     cur.execute("select buyer_id from orders where id = %s",(data['id'],))
     buyer_id = cur.fetchone()[0]
-    await state.clear()
-
+    cur.execute("UPDATE orders st_s = True WHERE id = %s",(data['id'],))
+    base.commit()
     await rating('update','buyer',buyer_id,data['rate'])
     
     # await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
     msg = await bot.send_message(user_id,f'Чудово, замовлення закрито')
     asyncio.create_task(delete_message(msg, 5))
+    cur.execute("UPDATE orders SET st_s = True WHERE id = %s",(data['id'],))
+    base.commit()
+    cur.execute('''SELECT status,name,category,buyer_com,delivery,payment,st_b,st_s
+                        FROM orders
+                            WHERE id = %s
+    ''',(data['id'],))
+    status = cur.fetchone()
+    cur.execute("SELECT chat_s,msg_s FROM orders WHERE id = %s",(data['id'],))
+    msg = cur.fetchone()
+    cur.execute('''SELECT phone,name
+                                FROM sellers
+                                    WHERE id = %s
+            ''',(str(user_id),))
+    phom = cur.fetchone()
+    btn = end_button(data['id'])
+    await bot2.edit_message_text(chat_id = msg[0] ,message_id=msg[1],text = f'''Чудово ви обрали продавця, {phom[1]}
+id замовлення: `{data['id']}` 🟢🟢
+Товар: {status[1]}
+Телефон продавця: `{str(phom[0])}`
+Категорія: {status[2]}
+Доставка: {status[4]}
+Спосіб оплати: {status[5]}
+Коментар: {status[3]}''',reply_markup=btn.as_markup(),parse_mode='Markdown')
+    await state.clear()
     
 
 
