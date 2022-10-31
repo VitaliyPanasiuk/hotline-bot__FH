@@ -136,7 +136,7 @@ async def test_start(message: Message, state: FSMContext):
     await bot.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
     
         
-    await bot.send_message(user_id, "Чудово, вкажіть додаткови умови коментарем",reply_markup=types.ReplyKeyboardRemove())
+    await bot.send_message(user_id, "Чудово, вкажіть додаткові умови коментарем(модель товару, колір, кількість, додаткові побажання тощо)",reply_markup=types.ReplyKeyboardRemove())
     await state.set_state(make_req.comment)
     # await bot.send_message(user_id, "Чудово!",reply_markup=types.ReplyKeyboardRemove())
     # await bot.send_message(user_id, "Вкажіть бажаний спосіб доставки (можна обрати декілька)",reply_markup=btn.as_markup())
@@ -289,14 +289,14 @@ async def test_start(message: Message, state: FSMContext):
 Спосіб оплати: {data["payment"]}
 мін-макс ціна: {data["min_max"]}
 
-            '''
+        '''
     mesg = await bot.send_message(user_id,message)
-    asyncio.create_task(delete_message(mesg, 15))
+    # asyncio.create_task(delete_message(mesg, 15))
     buyer_rating = await rating('get','buyer',user_id,0)
 
     await mailing_sellers(data['name'], data['cat'], data['min_max'],buyer_rating,data['comment'],id,data['city'], data['delivers'])
     # TODO: change timer to 600
-    await asyncio.sleep(600)
+    await asyncio.sleep(20)
     print('end of await answers from sellers')
     # await bot.delete_message(chat_id = message.chat.id ,message_id = message.message_id + 1)
     cur.execute('''SELECT sellers,prices,seller_terms,seller_coms,category,buyer_com,name
