@@ -171,7 +171,7 @@ async def test_start(message: Message, state: FSMContext):
 async def user_start(callback_query: types.CallbackQuery, callback_data: SellersCallbackFactory, state: FSMContext):
     user_id = callback_query.from_user.id
     order_id = callback_data.order_id
-    await callback_query.message.delete()
+    # await callback_query.message.delete()
     await state.update_data(id=int(order_id))
     btn = choose_action()
     await bot2.send_message(user_id,f'Оберіть дію',reply_markup=btn.as_markup(resize_keyboard=True))
@@ -188,7 +188,7 @@ async def test_start(message: Message, state: FSMContext):
     # btn = homeS_button()
     if text == 'Підтвердити виконання':
         await bot2.send_message(user_id,f'Введіть бал, що буде поставленно покупцю(від 1 до 10)',reply_markup=types.ReplyKeyboardRemove())
-        await state.set_state(end_order.action)
+        await state.set_state(end_order.rate)
     elif text == 'Скарга':
         cur.execute("select buyer_id from orders where id = %s",(data['id'],))
         buyer_id = cur.fetchone()
@@ -200,7 +200,6 @@ async def test_start(message: Message, state: FSMContext):
         asyncio.create_task(delete_message(msg, 5))
     elif text == 'Відмінити замовлення':
         # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
-        
         msg = await bot2.send_message(user_id,"Замовлення було відмінено")
         asyncio.create_task(delete_message(msg, 5))
         
@@ -216,12 +215,12 @@ async def test_start(message: Message, state: FSMContext):
     data = await state.get_data()
     cur.execute("select buyer_id from orders where id = %s",(data['id'],))
     buyer_id = cur.fetchone()[0]
-    cur.execute("UPDATE orders st_s = True WHERE id = %s",(data['id'],))
+    cur.execute("UPDATE orders SET st_s = True WHERE id = %s",(data['id'],))
     base.commit()
     await rating('update','buyer',buyer_id,data['rate'])
     
     # await bot.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
-    msg = await bot.send_message(user_id,f'Чудово, замовлення закрито')
+    msg = await bot2.send_message(user_id,f'Чудово, замовлення закрито')
     asyncio.create_task(delete_message(msg, 5))
     cur.execute("UPDATE orders SET st_s = True WHERE id = %s",(data['id'],))
     base.commit()
@@ -230,7 +229,7 @@ async def test_start(message: Message, state: FSMContext):
                             WHERE id = %s
     ''',(data['id'],))
     status = cur.fetchone()
-    cur.execute("SELECT chat_s,msg_s FROM orders WHERE id = %s",(data['id'],))
+    cur.execute("SELECT chat_b,msg_b FROM orders WHERE id = %s",(data['id'],))
     msg = cur.fetchone()
     cur.execute('''SELECT phone,name
                                 FROM sellers
@@ -238,7 +237,7 @@ async def test_start(message: Message, state: FSMContext):
             ''',(str(user_id),))
     phom = cur.fetchone()
     btn = end_button(data['id'])
-    await bot2.edit_message_text(chat_id = msg[0] ,message_id=msg[1],text = f'''Чудово ви обрали продавця, {phom[1]}
+    await bot.edit_message_text(chat_id = msg[0] ,message_id=msg[1],text = f'''Чудово ви обрали продавця, {phom[1]}
 id замовлення: `{data['id']}` 🟢🟢
 Товар: {status[1]}
 Телефон продавця: `{str(phom[0])}`
