@@ -17,7 +17,15 @@ from tgbot.keyboards.textBtn import choose_cat_button
 from tgbot.keyboards.inlineBtn import choose_delivery_button,accept_order_buyer_btn,homeB_button,choose_payment_button,end_button
 from tgbot.keyboards.inlineBtn import SellersCallbackFactory
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
+from bs4 import BeautifulSoup
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 
+import time
 import datetime
 import requests
 from bs4 import BeautifulSoup
@@ -103,29 +111,46 @@ async def test_start(message: Message, state: FSMContext):
     await bot.delete_message(chat_id = message.chat.id ,message_id = message.message_id - 1 )
     
     arr = text.split(' ')
-    url = "https://hotline.ua/ua/sr/?q="
+    url = "https://rozetka.com.ua/search/?text="
     for elem in arr:
-        url += elem + "%20"
+        url += elem + "+"
         
-    r = requests.get(url, headers=headers)
-    soup = BeautifulSoup(r.text, 'lxml')
-    try:
-        cat = soup.findAll('div', class_='search-sidebar-catalogs__name')
-        price = soup.find('div', class_='list-item__value--overlay').find('div', class_='m_b-5').find('div', class_='text-sm')
-        categories = []
-        price = price.text.strip()
-        await state.update_data(min_max=price)
+    option = Options()
+    option.binary_location = "C:\Program Files\Google\Chrome\Application\chrome.exe"
+    option.add_argument("--disable-infobars") 
+    option.add_argument("--start-maximized")
+    # r = requests.get(url, headers=headers)
+    browser = webdriver.Chrome(executable_path='E:\programs\chromedriver_win32\chromedriver.exe',chrome_options=option)
+    browser.get(url)
+    # soup = BeautifulSoup(r.text, 'lxml')
+    # try:
+    time.sleep(3)
+    browser.find_element(By.CSS_SELECTOR,'.categories-filter__toggle-main>button').click()
+    test = browser.find_elements(By.CSS_SELECTOR,'.categories-filter__toggle')
+    for i in test:
+        if i.text != 'Згорнути':
+            i.click()
+    categories = []
+    products_title = browser.find_elements(By.CSS_SELECTOR,'.categories-filter__link-title')
+    for i in products_title:
+        categories.append(i.text)
+    print(categories)
+    #     cat = soup.findAll('div', class_='search-sidebar-catalogs__name')
+    #     price = soup.find('div', class_='list-item__value--overlay').find('div', class_='m_b-5').find('div', class_='text-sm')
+    #     categories = []
+    #     price = price.text.strip()
+    #     await state.update_data(min_max=price)
 
-        for i in cat:
-            p = re.sub(r'\([^)]*\)', '', i.text).strip()
-            categories.append(p)
+    #     for i in cat:
+    #         p = re.sub(r'\([^)]*\)', '', i.text).strip()
+    #         categories.append(p)
             
-        btn = choose_cat_button(categories)
-        await bot.send_message(user_id, "Оберіть категорію, що найбільше відповідає запитуваному товару",reply_markup=btn.as_markup(resize_keyboard=True))
-        await state.set_state(make_req.cat)
-    except:
-        await bot.send_message(user_id, "Я не зміг встановити категорію товару, будь ласка, вкажіть бренд товару, а його модель вкажіть в додаткових коментарях",reply_markup=types.ReplyKeyboardRemove())
-        await state.set_state(make_req.name)
+    btn = choose_cat_button(categories)
+    await bot.send_message(user_id, "Оберіть категорію, що найбільше відповідає запитуваному товару",reply_markup=btn.as_markup(resize_keyboard=True))
+    await state.set_state(make_req.cat)
+    # except:
+    #     await bot.send_message(user_id, "Я не зміг встановити категорію товару, будь ласка, вкажіть бренд товару, а його модель вкажіть в додаткових коментарях",reply_markup=types.ReplyKeyboardRemove())
+    #     await state.set_state(make_req.name)
         
 @user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.cat)
 async def test_start(message: Message, state: FSMContext):
@@ -270,7 +295,7 @@ async def test_start(message: Message, state: FSMContext):
     # await state.set_state(make_req.comment)
     
     msg = await bot.send_message(user_id, "Чудово, ваше замовлення прийнято, у кожного із продавців є 10 хвилин для надання цінової та бонусної пропозиції. Зачекайте, будь ласка!",reply_markup=types.ReplyKeyboardRemove())
-    asyncio.create_task(delete_message(msg, 15))
+    asyncio.create_task(delete_message(msg, 120))
     data = await state.get_data()
     id = randint(1,999999)
     now = datetime.datetime.now()
@@ -289,7 +314,8 @@ async def test_start(message: Message, state: FSMContext):
 Спосіб оплати: {data["payment"]}
 мін-макс ціна: {data["min_max"]}
         '''
-    mesg = await bot.send_message(user_id,message)
+    btn = homeB_button()
+    mesg = await bot.send_message(user_id,message,reply_markup=btn.as_markup())
     cur.execute("Update orders SET msg_b = %s WHERE id=%s",(str(mesg.message_id),id))
     cur.execute("Update orders SET chat_b = %s WHERE id=%s",(str(mesg.chat.id),id))
     base.commit()
@@ -326,7 +352,7 @@ async def test_start(message: Message, state: FSMContext):
             await bot.send_message(user_id,message,reply_markup=btn.as_markup(resize_keyboard=True))
     else:
         mesg = await bot.send_message(user_id,'На жаль, жоден із продавців не надав цінової пропозиціїї на ваш запит. Спробуйте пізніше , або змініть критерії пошуку.')
-        asyncio.create_task(delete_message(mesg, 15))
+        asyncio.create_task(delete_message(mesg, 120))
         
 @user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.comment)
 async def test_start(message: Message, state: FSMContext):

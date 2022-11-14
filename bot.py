@@ -54,6 +54,7 @@ async def main():
     register_global_middlewares(dp2, config)
 
     # await on_startup(bot, config.tg_bot.admin_ids)
+    # ,update_category()
     await asyncio.gather(dp.start_polling(bot), dp2.start_polling(bot2),update_category())
 
 

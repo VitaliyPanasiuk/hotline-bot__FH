@@ -16,9 +16,9 @@ def choose_action():
     home_buttons.add(
         types.KeyboardButton(text='Підтвердити виконання')
     )
-    home_buttons.add(
-        types.KeyboardButton(text='Скарга')
-    )
+    # home_buttons.add(
+    #     types.KeyboardButton(text='Скарга')
+    # )
     home_buttons.add(
         types.KeyboardButton(text='Відмінити замовлення')
     )

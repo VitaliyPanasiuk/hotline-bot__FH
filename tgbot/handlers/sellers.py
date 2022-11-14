@@ -163,7 +163,7 @@ async def test_start(message: Message, state: FSMContext):
     # btn = homeS_button()
     # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
     msg = await bot2.send_message(user_id,"Ваша заявка прийнята")
-    asyncio.create_task(delete_message(msg, 5))
+    asyncio.create_task(delete_message(msg, 120))
     await state.clear()
 
 
@@ -189,19 +189,41 @@ async def test_start(message: Message, state: FSMContext):
     if text == 'Підтвердити виконання':
         await bot2.send_message(user_id,f'Введіть бал, що буде поставленно покупцю(від 1 до 10)',reply_markup=types.ReplyKeyboardRemove())
         await state.set_state(end_order.rate)
-    elif text == 'Скарга':
-        cur.execute("select buyer_id from orders where id = %s",(data['id'],))
-        buyer_id = cur.fetchone()
-        cur.execute("update buyers set rating = rating - 1 where id = %s",(buyer_id[0],))
-        base.commit()
-        # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
+    # elif text == 'Скарга':
+    #     cur.execute("select buyer_id from orders where id = %s",(data['id'],))
+    #     buyer_id = cur.fetchone()
+    #     cur.execute("update buyers set rating = rating - 1 where id = %s",(buyer_id[0],))
+    #     base.commit()
+    #     # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
         
-        msg = await bot2.send_message(user_id,"Скаргу було надіслано")
-        asyncio.create_task(delete_message(msg, 5))
+    #     msg = await bot2.send_message(user_id,"Скаргу було надіслано")
+    #     asyncio.create_task(delete_message(msg, 5))
     elif text == 'Відмінити замовлення':
         # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
         msg = await bot2.send_message(user_id,"Замовлення було відмінено")
-        asyncio.create_task(delete_message(msg, 5))
+        asyncio.create_task(delete_message(msg, 15))
+        cur.execute('''SELECT status,name,category,buyer_com,delivery,payment,st_b,st_s
+                        FROM orders
+                            WHERE id = %s
+    ''',(data['id'],))
+        status = cur.fetchone()
+        cur.execute("SELECT chat_b,msg_b FROM orders WHERE id = %s",(data['id'],))
+        msg = cur.fetchone()
+        cur.execute('''SELECT phone,name
+                                    FROM sellers
+                                        WHERE id = %s
+                ''',(str(user_id),))
+        phom = cur.fetchone()
+        btn = end_button(data['id'])
+        await bot.edit_message_text(chat_id = msg[0] ,message_id=msg[1],text = f'''Продавець відхилив ваше замовлення, {phom[1]}
+id замовлення: `{data['id']}` 🔴🔴
+Товар: {status[1]}
+Телефон продавця: `{str(phom[0])}`
+Категорія: {status[2]}
+Доставка: {status[4]}
+Спосіб оплати: {status[5]}
+Коментар: {status[3]}''',reply_markup=btn.as_markup(),parse_mode='Markdown')
+        await state.clear()
         
 
 @seller_router.message_handler(content_types=types.ContentType.TEXT, state=end_order.rate)
