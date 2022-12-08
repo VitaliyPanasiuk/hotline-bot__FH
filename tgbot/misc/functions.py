@@ -82,7 +82,7 @@ async def auf(type, user_id):
             return True
 
 
-async def mailing_sellers(name, category, min_max, rate, comment, id, city, delivery):
+async def mailing_sellers(name, category, rate, comment, id, city, delivery):
     cur.execute("SELECT * FROM sellers")
     sellers = cur.fetchall()
     print("start send messages to sellers")
@@ -97,7 +97,6 @@ async def mailing_sellers(name, category, min_max, rate, comment, id, city, deli
 Категорія: {category}
 Місто: {city}
 Доставка: {delivery}
-мін-макс ціна: {min_max}
 Коментар: {comment}
 Рейтинг покупця: {str(rate)}
             """
@@ -122,7 +121,7 @@ async def update_category():
                 cat = []
                 email = result[k][1]
                 for i in range(len(result[k])):
-                    if i not in [0, 1, 2, 3, 4, 5] and result[k][i]:
+                    if i not in range(18) and result[k][i]:
                         arr = result[k][i].split(",")
                         for r in arr:
                             cat.append(r.strip())

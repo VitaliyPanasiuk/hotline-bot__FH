@@ -28,15 +28,14 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
 from bs4 import BeautifulSoup
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
 import time
 import datetime
 import requests
-from bs4 import BeautifulSoup
 import re
 import asyncio
 
@@ -144,7 +143,8 @@ async def test_start(message: Message, state: FSMContext):
     s = Service("/usr/bin/chromedriver")
     # option.binary_location = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 
-    browser = webdriver.Chrome(service=s, chrome_options=option)
+    # browser = webdriver.Chrome(service=s, chrome_options=option)
+    browser = webdriver.Chrome(executable_path='E:\programs\chromedriver_win32\chromedriver.exe',chrome_options=option)
     browser.get(url)
     browser.implicitly_wait(1.5)
     # soup = BeautifulSoup(r.text, 'lxml')
@@ -400,13 +400,12 @@ async def test_start(message: Message, state: FSMContext):
     now = datetime.datetime.now()
     valid_time = now + datetime.timedelta(minutes=10)
     cur.execute(
-        "INSERT INTO orders (id,buyer_id, name, category,min_max,delivery,city,buyer_com,valid_time,payment) VALUES (%s,%s,%s, %s, %s, %s, %s, %s,%s,%s)",
+        "INSERT INTO orders (id,buyer_id, name, category,delivery,city,buyer_com,valid_time,payment) VALUES (%s,%s, %s, %s, %s, %s, %s,%s,%s)",
         (
             id,
             str(user_id),
             data["name"],
             data["cat"],
-            data["min_max"],
             data["delivers"],
             data["city"],
             data["comment"],
@@ -424,7 +423,6 @@ async def test_start(message: Message, state: FSMContext):
 Місто: {data["city"]}
 Доставка: {data["delivers"]}
 Спосіб оплати: {data["payment"]}
-мін-макс ціна: {data["min_max"]}
         """
     btn = homeB_button()
     mesg = await bot.send_message(user_id, message, reply_markup=btn.as_markup())
@@ -437,7 +435,6 @@ async def test_start(message: Message, state: FSMContext):
     await mailing_sellers(
         data["name"],
         data["cat"],
-        data["min_max"],
         buyer_rating,
         data["comment"],
         id,
@@ -445,7 +442,7 @@ async def test_start(message: Message, state: FSMContext):
         data["delivers"],
     )
     # TODO: change timer to 600
-    await asyncio.sleep(600)
+    await asyncio.sleep(15)
     print("end of await answers from sellers")
     # await bot.delete_message(chat_id = message.chat.id ,message_id = message.message_id + 1)
     cur.execute(
@@ -456,6 +453,7 @@ async def test_start(message: Message, state: FSMContext):
         (id,),
     )
     order = cur.fetchone()
+    print(order)
     if order and order[0]:
         for i in range(len(order[0])):
             cur.execute("SELECT name FROM sellers WHERE id = %s", (str(order[0][i]),))
