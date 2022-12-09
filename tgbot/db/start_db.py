@@ -17,51 +17,51 @@ async def postgre_start():
     rating   integer[],
     phone    text,
     delivery text[],
-    payment text[]
+    payment  text[]
 );
 
 create table if not exists sellers
 (
-    id           text not null
-        constraint sellers_pk
-            primary key,
+    id           text not null,
     name         text,
     org_form     text,
     category     text[],
-    email     text,
+    email        text,
     phone        text,
     rating       integer[],
-    person_phone text
+    person_phone text,
+    constraint sellers_pk
+        primary key (id)
 );
 
 create table if not exists orders
 (
-    id               int 
-            primary key,
-    buyer_id         text,
-    seller_id        text,
-    price            text,
-    seller_term      text,
-    seller_com       text,
-    sellers          text[],
-    prices           text[],
-    seller_terms     text[],
-    seller_coms      text[],
-    name             text,
-    category         text,
-    min_max          text,
-    delivery         text,
-    payment          text,
-    city             text,
-    buyer_com        text,
-    status           text default 'in search',
-    st_b             boolean default false,
-    st_s             boolean default false,
-    valid_time       timestamp,
-    msg_b  text,
-    msg_s  text,
-    chat_b  text,
-    chat_s  text
+    id           integer not null,
+    buyer_id     text,
+    seller_id    text,
+    price        text,
+    seller_term  text,
+    seller_com   text,
+    sellers      text[],
+    prices       text[],
+    seller_terms text[],
+    seller_coms  text[],
+    name         text,
+    category     text,
+    min_max      text,
+    delivery     text,
+    payment      text,
+    city         text,
+    buyer_com    text,
+    status       text    default 'in search'::text,
+    st_b         boolean default false,
+    st_s         boolean default false,
+    valid_time   timestamp,
+    msg_b        text,
+    msg_s        text,
+    chat_b       text,
+    chat_s       text,
+    primary key (id)
 );''')
     
     
