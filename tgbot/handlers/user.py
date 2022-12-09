@@ -438,7 +438,7 @@ async def test_start(message: Message, state: FSMContext):
         data["delivers"],
     )
     # TODO: change timer to 600
-    await asyncio.sleep(15)
+    await asyncio.sleep(600)
     print("end of await answers from sellers")
     # await bot.delete_message(chat_id = message.chat.id ,message_id = message.message_id + 1)
     cur.execute(
