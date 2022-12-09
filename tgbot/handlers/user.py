@@ -150,43 +150,36 @@ async def test_start(message: Message, state: FSMContext):
     )
     browser.get(url)
     browser.implicitly_wait(1.5)
-    # soup = BeautifulSoup(r.text, 'lxml')
-    # try:
-    browser.find_element(
-        By.CSS_SELECTOR, ".categories-filter__toggle-main>button"
-    ).click()
-    test = browser.find_elements(By.CSS_SELECTOR, ".categories-filter__toggle")
-    for i in test:
-        if i.text != "Згорнути":
-            i.click()
-    categories = []
-    products_title = browser.find_elements(
-        By.CSS_SELECTOR, ".categories-filter__link-title"
-    )
-    for i in products_title:
-        if i.text != "Всі результати":
-            categories.append(i.text)
-    # print(categories)
-    #     cat = soup.findAll('div', class_='search-sidebar-catalogs__name')
-    #     price = soup.find('div', class_='list-item__value--overlay').find('div', class_='m_b-5').find('div', class_='text-sm')
-    #     categories = []
-    #     price = price.text.strip()
-    #     await state.update_data(min_max=price)
+    try:
+        browser.find_element(
+            By.CSS_SELECTOR, ".categories-filter__toggle-main>button"
+        ).click()
+        test = browser.find_elements(By.CSS_SELECTOR, ".categories-filter__toggle")
+        for i in test:
+            if i.text != "Згорнути":
+                i.click()
+        categories = []
+        products_title = browser.find_elements(
+            By.CSS_SELECTOR, ".categories-filter__link-title"
+        )
+        for i in products_title:
+            if i.text != "Всі результати":
+                categories.append(i.text)
 
-    #     for i in cat:
-    #         p = re.sub(r'\([^)]*\)', '', i.text).strip()
-    #         categories.append(p)
-
-    btn = choose_cat_button(categories)
-    await bot.send_message(
-        user_id,
-        "Оберіть категорію, що найбільше відповідає запитуваному товару",
-        reply_markup=btn.as_markup(resize_keyboard=True),
-    )
-    await state.set_state(make_req.cat)
-    # except:
-    #     await bot.send_message(user_id, "Я не зміг встановити категорію товару, будь ласка, вкажіть бренд товару, а його модель вкажіть в додаткових коментарях",reply_markup=types.ReplyKeyboardRemove())
-    #     await state.set_state(make_req.name)
+        btn = choose_cat_button(categories)
+        await bot.send_message(
+            user_id,
+            "Оберіть категорію, що найбільше відповідає запитуваному товару",
+            reply_markup=btn.as_markup(resize_keyboard=True),
+        )
+        await state.set_state(make_req.cat)
+    except:
+        await bot.send_message(
+            user_id,
+            "Я не зміг встановити категорію товару, будь ласка, вкажіть бренд товару, а його модель вкажіть в додаткових коментарях",
+            reply_markup=types.ReplyKeyboardRemove(),
+        )
+        await state.set_state(make_req.name)
 
 
 @user_router.message_handler(content_types=types.ContentType.TEXT, state=make_req.cat)
@@ -556,10 +549,6 @@ async def user_start(
             (order_id,),
         )
         n = cur.fetchone()
-        print(n)
-        print(n[0])
-        print(type(n[0]))
-        print(n[0].index(seller_id))
 
         cur.execute(
             "UPDATE orders SET seller_id = %s, price = %s, seller_term = %s, seller_com = %s,status = 'in progress' WHERE id = %s",
@@ -668,6 +657,7 @@ id замовлення: `{order_id}` {"🟢🟢" if status[6] else "🟢🔴"}
                     "Update orders SET chat_s = %s WHERE id=%s",
                     (str(test.chat.id), order_id),
                 )
+                base.commit()
 
 
 @user_router.callback_query(lambda c: c.data == "nova_pochta")
@@ -852,6 +842,7 @@ async def user_start(
 async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
+    
     await state.update_data(rate=int(text))
     await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
     await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
@@ -885,19 +876,80 @@ async def test_start(message: Message, state: FSMContext):
     user_phone = cur.fetchone()
     cur.execute("SELECT chat_s,msg_s FROM orders WHERE id = %s", (data["id"],))
     msg = cur.fetchone()
+    cur.execute('''SELECT st_s from orders where id = %s''',(data['id'],))
+    st_s = cur.fetchone()
     btn = end_button(data["id"])
-    await bot2.edit_message_text(
-        chat_id=msg[0],
-        message_id=msg[1],
-        text=f"""Покупець прийняв ваше замовлення
+    print('st_s',st_s[0])
+    if st_s[0] == True:
+        await bot2.edit_message_text(
+            chat_id=msg[0],
+            message_id=msg[1],
+            text=f"""Покупець прийняв ваше замовлення
 id замовлення: `{data['id']}` 🟢🟢
 Номер телефону покупця: `{user_phone[0]}`
 Ім'я покупця: {user_phone[1]}
 Товар: {status[1]}
 Категорія: {status[2]}
 Коментар: {status[3]}
-""",
-        reply_markup=btn.as_markup(),
-        parse_mode="Markdown",
-    )
+    """,
+            parse_mode="Markdown",
+        )
+    else:
+        await bot2.edit_message_text(
+            chat_id=msg[0],
+            message_id=msg[1],
+            text=f"""Покупець прийняв ваше замовлення
+id замовлення: `{data['id']}` 🟢🟢
+Номер телефону покупця: `{user_phone[0]}`
+Ім'я покупця: {user_phone[1]}
+Товар: {status[1]}
+Категорія: {status[2]}
+Коментар: {status[3]}
+    """,
+            reply_markup=btn.as_markup(),
+            parse_mode="Markdown",
+        )
+        
+    # radact buyer message
+    cur.execute('''SELECT status,name,category,buyer_com,delivery,payment,st_b,st_s
+                        FROM orders
+                            WHERE id = %s
+    ''',(data['id'],))
+    status = cur.fetchone()
+    cur.execute("SELECT chat_b,msg_b FROM orders WHERE id = %s",(data['id'],))
+    msg = cur.fetchone()
+    cur.execute('''SELECT phone,name
+                                FROM sellers
+                                    WHERE id = %s
+            ''',(str(user_id),))
+    phom = cur.fetchone()
+    
+    btn = end_button(data['id'])
+    print(st_s)
+    if st_s[0] == True:
+        await bot.edit_message_text(
+            chat_id = msg[0] ,
+            message_id=msg[1],
+            text = f'''Чудово ви обрали продавця, {phom[1]}
+id замовлення: `{data['id']}` 🟢🟢
+Товар: {status[1]}
+Телефон продавця: `{str(phom[0])}`
+Категорія: {status[2]}
+Доставка: {status[4]}
+Спосіб оплати: {status[5]}
+Коментар: {status[3]}''',
+            parse_mode='Markdown')
+    else:
+        await bot.edit_message_text(
+            chat_id = msg[0] ,
+            message_id=msg[1],
+            text = f'''Чудово ви обрали продавця, {phom[1]}
+id замовлення: `{data['id']}` 🟢🔴
+Товар: {status[1]}
+Телефон продавця: `{str(phom[0])}`
+Категорія: {status[2]}
+Доставка: {status[4]}
+Спосіб оплати: {status[5]}
+Коментар: {status[3]}''',
+            parse_mode='Markdown')
     await state.clear()

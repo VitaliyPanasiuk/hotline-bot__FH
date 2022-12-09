@@ -222,8 +222,43 @@ id замовлення: `{data['id']}` 🔴🔴
 Категорія: {status[2]}
 Доставка: {status[4]}
 Спосіб оплати: {status[5]}
-Коментар: {status[3]}''',reply_markup=btn.as_markup(),parse_mode='Markdown')
-        await state.clear()
+Коментар: {status[3]}''',parse_mode='Markdown')
+        
+        cur.execute(
+        """SELECT status,name,category,buyer_com,delivery,payment,st_b,st_s
+                        FROM orders
+                            WHERE id = %s
+    """,
+        (data["id"],),
+    )
+    status = cur.fetchone()
+    cur.execute('SELECT buyer_id from orders where id = %s',(data['id'],))
+    buyer_id = cur.fetchone()
+    print(buyer_id)
+    cur.execute("""SELECT phone,name
+                            FROM buyers
+                                WHERE id = %s """,(str(buyer_id[0]),))
+    user_phone = cur.fetchone()
+    print(user_phone)
+    
+    cur.execute("SELECT chat_s,msg_s FROM orders WHERE id = %s", (data["id"],))
+    msg = cur.fetchone()
+    btn = end_button(data["id"])
+    await bot2.edit_message_text(
+        chat_id=msg[0],
+        message_id=msg[1],
+        text=f"""Ви відхилили замовлення
+id замовлення: `{data['id']}` 🔴🔴
+Номер телефону покупця: `{user_phone[0]}`
+Ім'я покупця: {user_phone[1]}
+Товар: {status[1]}
+Категорія: {status[2]}
+Коментар: {status[3]}
+    """,
+            parse_mode="Markdown",
+        )
+        
+    await state.clear()
         
 
 @seller_router.message_handler(content_types=types.ContentType.TEXT, state=end_order.rate)
@@ -258,15 +293,86 @@ async def test_start(message: Message, state: FSMContext):
                                     WHERE id = %s
             ''',(str(user_id),))
     phom = cur.fetchone()
+    cur.execute('''SELECT st_b from orders where id = %s''',(data['id'],))
+    st_b = cur.fetchone()
     btn = end_button(data['id'])
-    await bot.edit_message_text(chat_id = msg[0] ,message_id=msg[1],text = f'''Чудово ви обрали продавця, {phom[1]}
+    print('st_b',st_b[0])
+    if st_b[0] == True:
+        await bot.edit_message_text(
+            chat_id = msg[0] ,
+            message_id=msg[1],
+            text = f'''Чудово ви обрали продавця, {phom[1]}
 id замовлення: `{data['id']}` 🟢🟢
 Товар: {status[1]}
 Телефон продавця: `{str(phom[0])}`
 Категорія: {status[2]}
 Доставка: {status[4]}
 Спосіб оплати: {status[5]}
-Коментар: {status[3]}''',reply_markup=btn.as_markup(),parse_mode='Markdown')
+Коментар: {status[3]}''',
+            parse_mode='Markdown')
+    else:
+        await bot.edit_message_text(
+        chat_id = msg[0] ,
+        message_id=msg[1],
+        text = f'''Чудово ви обрали продавця, {phom[1]}
+id замовлення: `{data['id']}` 🟢🟢
+Товар: {status[1]}
+Телефон продавця: `{str(phom[0])}`
+Категорія: {status[2]}
+Доставка: {status[4]}
+Спосіб оплати: {status[5]}
+Коментар: {status[3]}''',
+        reply_markup=btn.as_markup(),
+        parse_mode='Markdown')
+    
+    cur.execute(
+        """SELECT status,name,category,buyer_com,delivery,payment,st_b,st_s
+                        FROM orders
+                            WHERE id = %s
+    """,
+        (data["id"],),
+    )
+    status = cur.fetchone()
+    cur.execute('SELECT buyer_id from orders where id = %s',(data['id'],))
+    buyer_id = cur.fetchone()
+    print(buyer_id)
+    cur.execute("""SELECT phone,name
+                            FROM buyers
+                                WHERE id = %s """,(str(buyer_id[0]),))
+    user_phone = cur.fetchone()
+    print(user_phone)
+    
+    cur.execute("SELECT chat_s,msg_s FROM orders WHERE id = %s", (data["id"],))
+    msg = cur.fetchone()
+    btn = end_button(data["id"])
+    if st_b[0] == True:
+        await bot2.edit_message_text(
+            chat_id=msg[0],
+            message_id=msg[1],
+            text=f"""Покупець прийняв ваше замовлення
+id замовлення: `{data['id']}` 🟢🟢
+Номер телефону покупця: `{user_phone[0]}`
+Ім'я покупця: {user_phone[1]}
+Товар: {status[1]}
+Категорія: {status[2]}
+Коментар: {status[3]}
+    """,
+            parse_mode="Markdown",
+        )
+    else:
+        await bot2.edit_message_text(
+            chat_id=msg[0],
+            message_id=msg[1],
+            text=f"""Покупець прийняв ваше замовлення
+id замовлення: `{data['id']}` 🟢🔴
+Номер телефону покупця: `{user_phone[0]}`
+Ім'я покупця: {user_phone[1]}
+Товар: {status[1]}
+Категорія: {status[2]}
+Коментар: {status[3]}
+    """,
+            parse_mode="Markdown",
+        )
     await state.clear()
     
 
