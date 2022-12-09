@@ -144,7 +144,10 @@ async def test_start(message: Message, state: FSMContext):
     # option.binary_location = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 
     # browser = webdriver.Chrome(service=s, chrome_options=option)
-    browser = webdriver.Chrome(executable_path='E:\programs\chromedriver_win32\chromedriver.exe',chrome_options=option)
+    browser = webdriver.Chrome(
+        executable_path="E:\programs\chromedriver_win32\chromedriver.exe",
+        chrome_options=option,
+    )
     browser.get(url)
     browser.implicitly_wait(1.5)
     # soup = BeautifulSoup(r.text, 'lxml')
@@ -453,7 +456,7 @@ async def test_start(message: Message, state: FSMContext):
         (id,),
     )
     order = cur.fetchone()
-    print(order)
+    # print(order)
     if order and order[0]:
         for i in range(len(order[0])):
             cur.execute("SELECT name FROM sellers WHERE id = %s", (str(order[0][i]),))
@@ -462,9 +465,9 @@ async def test_start(message: Message, state: FSMContext):
             # seller_id,order_price,order_term,order_com,order_id
             btn = accept_order_buyer_btn(
                 str(order[0][i]),
-                str(order[1][i]),
-                str(order[2][i]),
-                str(order[3][i]),
+                # str(order[1][i]),
+                # str(order[2][i]),
+                # str(order[3][i]),
                 id,
             )
             message = f"""
@@ -521,9 +524,9 @@ async def user_start(
 ):
     user_id = callback_query.from_user.id
     seller_id = callback_data.seller_id
-    price = callback_data.price
-    term = callback_data.term
-    com = callback_data.com
+    # price = callback_data.price
+    # term = callback_data.term
+    # com = callback_data.com
     order_id = callback_data.order_id
     await callback_query.message.delete()
     print("accept order")
@@ -549,8 +552,24 @@ async def user_start(
     status = cur.fetchone()
     if status[0] == "in search":
         cur.execute(
+            "SELECT sellers,prices,seller_terms,seller_coms FROM orders WHERE id = %s",
+            (order_id,),
+        )
+        n = cur.fetchone()
+        print(n)
+        print(n[0])
+        print(type(n[0]))
+        print(n[0].index(seller_id))
+
+        cur.execute(
             "UPDATE orders SET seller_id = %s, price = %s, seller_term = %s, seller_com = %s,status = 'in progress' WHERE id = %s",
-            (seller_id, price, term, com, order_id),
+            (
+                seller_id,
+                n[1][n[0].index(seller_id)],
+                n[2][n[0].index(seller_id)],
+                n[3][n[0].index(seller_id)],
+                order_id,
+            ),
         )
         base.commit()
         cur.execute(

@@ -97,9 +97,10 @@ def accept_order_btn(order):
     )
     return builder
 
-def accept_order_buyer_btn(seller_id,order_price,order_term,order_com,order_id):
+# order_price,order_term,order_com,
+def accept_order_buyer_btn(seller_id,order_id):
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="Прийняти", callback_data=SellersCallbackFactory(action="accept_order_buyer", seller_id=str(seller_id),price = str(order_price),term = str(order_term),com = str(order_com),order_id=int(order_id))
+        text="Прийняти", callback_data=SellersCallbackFactory(action="accept_order_buyer", seller_id=str(seller_id),order_id=int(order_id))
     )
     return builder
