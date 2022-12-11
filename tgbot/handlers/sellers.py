@@ -100,7 +100,7 @@ async def test_start(message: Message, state: FSMContext):
                 (user_id, data['name'], data['phone'], data['org'], data['email'],[]))
     base.commit()
     await bot2.send_message(user_id, "Ви зареєстровані")
-    await bot2.send_message(user_id, "Будь ласка, заповніть анкету та укажіть в ній усі цільові категорії товарів\послуг , що ви продаєте\надаєте!\nВкажіть email, котрий ви вказували при регістрації у боті\nhttps://forms.gle/BQAgbumLSM34cNv69")
+    await bot2.send_message(user_id, "Будь ласка, заповніть анкету та укажіть в ній усі цільові категорії товарів\послуг , що ви продаєте\надаєте!\nВкажіть email, котрий ви вказували при регістрації у боті\nhttps://forms.gle/XEUxayAXtrMK7xEe8")
     # btn = homeS_button()
     # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
 

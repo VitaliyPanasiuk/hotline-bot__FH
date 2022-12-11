@@ -143,11 +143,11 @@ async def test_start(message: Message, state: FSMContext):
     s = Service("/usr/bin/chromedriver")
     # option.binary_location = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 
-    # browser = webdriver.Chrome(service=s, chrome_options=option)
-    browser = webdriver.Chrome(
-        executable_path="E:\programs\chromedriver_win32\chromedriver.exe",
-        chrome_options=option,
-    )
+    browser = webdriver.Chrome(service=s, chrome_options=option)
+    # browser = webdriver.Chrome(
+    #     executable_path="E:\programs\chromedriver_win32\chromedriver.exe",
+    #     chrome_options=option,
+    # )
     browser.get(url)
     browser.implicitly_wait(1.5)
     try:
