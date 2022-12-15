@@ -143,21 +143,24 @@ async def test_start(message: Message, state: FSMContext):
     s = Service("/usr/bin/chromedriver")
     # option.binary_location = "C:\Program Files\Google\Chrome\Application\chrome.exe"
 
-    browser = webdriver.Chrome(service=s, chrome_options=option)
-    # browser = webdriver.Chrome(
-    #     executable_path="E:\programs\chromedriver_win32\chromedriver.exe",
-    #     chrome_options=option,
-    # )
+    # browser = webdriver.Chrome(service=s, chrome_options=option)
+    browser = webdriver.Chrome(
+        executable_path="E:\programs\chromedriver_win32\chromedriver.exe",
+        chrome_options=option,
+    )
     browser.get(url)
     browser.implicitly_wait(1.5)
     try:
-        browser.find_element(
-            By.CSS_SELECTOR, ".categories-filter__toggle-main>button"
-        ).click()
-        test = browser.find_elements(By.CSS_SELECTOR, ".categories-filter__toggle")
-        for i in test:
-            if i.text != "Згорнути":
-                i.click()
+        try:
+            browser.find_element(
+                By.CSS_SELECTOR, ".categories-filter__toggle-main>button"
+            ).click()
+            test = browser.find_elements(By.CSS_SELECTOR, ".categories-filter__toggle")
+            for i in test:
+                if i.text != "Згорнути":
+                    i.click()
+        except:
+            pass
         categories = []
         products_title = browser.find_elements(
             By.CSS_SELECTOR, ".categories-filter__link-title"
@@ -438,7 +441,7 @@ async def test_start(message: Message, state: FSMContext):
         data["delivers"],
     )
     # TODO: change timer to 600
-    await asyncio.sleep(600)
+    await asyncio.sleep(15)
     print("end of await answers from sellers")
     # await bot.delete_message(chat_id = message.chat.id ,message_id = message.message_id + 1)
     cur.execute(
@@ -842,7 +845,7 @@ async def user_start(
 async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
-    
+
     await state.update_data(rate=int(text))
     await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
     await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
@@ -876,10 +879,10 @@ async def test_start(message: Message, state: FSMContext):
     user_phone = cur.fetchone()
     cur.execute("SELECT chat_s,msg_s FROM orders WHERE id = %s", (data["id"],))
     msg = cur.fetchone()
-    cur.execute('''SELECT st_s from orders where id = %s''',(data['id'],))
+    cur.execute("""SELECT st_s from orders where id = %s""", (data["id"],))
     st_s = cur.fetchone()
     btn = end_button(data["id"])
-    print('st_s',st_s[0])
+    print("st_s", st_s[0])
     if st_s[0] == True:
         await bot2.edit_message_text(
             chat_id=msg[0],
@@ -909,47 +912,55 @@ id замовлення: `{data['id']}` 🟢🟢
             reply_markup=btn.as_markup(),
             parse_mode="Markdown",
         )
-        
+
     # radact buyer message
-    cur.execute('''SELECT status,name,category,buyer_com,delivery,payment,st_b,st_s
+    cur.execute(
+        """SELECT status,name,category,buyer_com,delivery,payment,st_b,st_s
                         FROM orders
                             WHERE id = %s
-    ''',(data['id'],))
+    """,
+        (data["id"],),
+    )
     status = cur.fetchone()
-    cur.execute("SELECT chat_b,msg_b FROM orders WHERE id = %s",(data['id'],))
+    cur.execute("SELECT chat_b,msg_b FROM orders WHERE id = %s", (data["id"],))
     msg = cur.fetchone()
-    cur.execute('''SELECT phone,name
+    cur.execute(
+        """SELECT phone,name
                                 FROM sellers
                                     WHERE id = %s
-            ''',(str(user_id),))
+            """,
+        (str(user_id),),
+    )
     phom = cur.fetchone()
-    
-    btn = end_button(data['id'])
+
+    btn = end_button(data["id"])
     print(st_s)
     if st_s[0] == True:
         await bot.edit_message_text(
-            chat_id = msg[0] ,
+            chat_id=msg[0],
             message_id=msg[1],
-            text = f'''Чудово ви обрали продавця, {phom[1]}
+            text=f"""Чудово ви обрали продавця, {phom[1]}
 id замовлення: `{data['id']}` 🟢🟢
 Товар: {status[1]}
 Телефон продавця: `{str(phom[0])}`
 Категорія: {status[2]}
 Доставка: {status[4]}
 Спосіб оплати: {status[5]}
-Коментар: {status[3]}''',
-            parse_mode='Markdown')
+Коментар: {status[3]}""",
+            parse_mode="Markdown",
+        )
     else:
         await bot.edit_message_text(
-            chat_id = msg[0] ,
+            chat_id=msg[0],
             message_id=msg[1],
-            text = f'''Чудово ви обрали продавця, {phom[1]}
+            text=f"""Чудово ви обрали продавця, {phom[1]}
 id замовлення: `{data['id']}` 🟢🔴
 Товар: {status[1]}
 Телефон продавця: `{str(phom[0])}`
 Категорія: {status[2]}
 Доставка: {status[4]}
 Спосіб оплати: {status[5]}
-Коментар: {status[3]}''',
-            parse_mode='Markdown')
+Коментар: {status[3]}""",
+            parse_mode="Markdown",
+        )
     await state.clear()
