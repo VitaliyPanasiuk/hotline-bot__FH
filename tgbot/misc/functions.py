@@ -82,21 +82,19 @@ async def auf(type, user_id):
             return True
 
 
-async def mailing_sellers(name, category, rate, comment, id, city, delivery):
+async def mailing_sellers(name, category, rate, comment, id, city, delivery, payment):
     cur.execute("SELECT * FROM sellers")
     sellers = cur.fetchall()
     print("start send messages to sellers")
     for seller in sellers:
-        print(seller)
-        print(category)
 
         if seller[3] and category in seller[3]:
-            print(True)
             message = f"""
 Товар: {name}
 Категорія: {category}
 Місто: {city}
 Доставка: {delivery}
+Спосіб оплати: {payment}
 Коментар: {comment}
 Рейтинг покупця: {str(rate)}
             """

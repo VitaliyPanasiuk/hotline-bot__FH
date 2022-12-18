@@ -162,12 +162,21 @@ async def test_start(message: Message, state: FSMContext):
         except:
             pass
         categories = []
+        # products_title = browser.find_elements(
+        #     By.CSS_SELECTOR, ".categories-filter__link-title"
+        # )
+        # for i in products_title:
+        #     if i.text != "Всі результати":
+        #         categories.append(i.text)
         products_title = browser.find_elements(
-            By.CSS_SELECTOR, ".categories-filter__link-title"
+            By.CSS_SELECTOR, ".categories-filter__item > .categories-filter__list"
         )
-        for i in products_title:
-            if i.text != "Всі результати":
-                categories.append(i.text)
+        for i in range(len(products_title)):
+            test2 = products_title[i].find_elements(
+                By.CSS_SELECTOR, ".categories-filter__link-title"
+            )
+            for k in test2:
+                categories.append(k.text)
 
         btn = choose_cat_button(categories)
         await bot.send_message(
@@ -439,9 +448,10 @@ async def test_start(message: Message, state: FSMContext):
         id,
         data["city"],
         data["delivers"],
+        data["payment"],
     )
     # TODO: change timer to 600
-    await asyncio.sleep(15)
+    await asyncio.sleep(600)
     print("end of await answers from sellers")
     # await bot.delete_message(chat_id = message.chat.id ,message_id = message.message_id + 1)
     cur.execute(
@@ -933,8 +943,7 @@ id замовлення: `{data['id']}` 🟢🟢
     )
     phom = cur.fetchone()
 
-    btn = end_button(data["id"])
-    print(st_s)
+    btn = homeB_button()
     if st_s[0] == True:
         await bot.edit_message_text(
             chat_id=msg[0],
@@ -947,6 +956,7 @@ id замовлення: `{data['id']}` 🟢🟢
 Доставка: {status[4]}
 Спосіб оплати: {status[5]}
 Коментар: {status[3]}""",
+            reply_markup=btn.as_markup(),
             parse_mode="Markdown",
         )
     else:
@@ -961,6 +971,7 @@ id замовлення: `{data['id']}` 🟢🔴
 Доставка: {status[4]}
 Спосіб оплати: {status[5]}
 Коментар: {status[3]}""",
+            reply_markup=btn.as_markup(),
             parse_mode="Markdown",
         )
     await state.clear()
