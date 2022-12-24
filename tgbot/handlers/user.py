@@ -178,13 +178,35 @@ async def test_start(message: Message, state: FSMContext):
             for k in test2:
                 categories.append(k.text)
 
-        btn = choose_cat_button(categories)
-        await bot.send_message(
-            user_id,
-            "Оберіть категорію, що найбільше відповідає запитуваному товару",
-            reply_markup=btn.as_markup(resize_keyboard=True),
-        )
-        await state.set_state(make_req.cat)
+        if not categories:
+            products_title = browser.find_elements(
+                By.CSS_SELECTOR, ".categories-filter__item"
+            )
+
+            for k in range(len(products_title)):
+                # test = products_title[k].find_element(By.CSS_SELECTOR,'.categories-filter__list')
+                test2 = products_title[k].find_elements(
+                    By.CSS_SELECTOR, ".categories-filter__link-title"
+                )
+                for i in test2:
+                    # if i.get_attribute("class") != 'categories-filter__link-title ng-star-inserted':
+                    if i.text != "Всі результати":
+                        categories.append(i.text)
+        if categories:
+            btn = choose_cat_button(categories)
+            await bot.send_message(
+                user_id,
+                "Оберіть категорію, що найбільше відповідає запитуваному товару",
+                reply_markup=btn.as_markup(resize_keyboard=True),
+            )
+            await state.set_state(make_req.cat)
+        else:
+            await bot.send_message(
+                user_id,
+                "Я не зміг встановити категорію товару, будь ласка, вкажіть бренд товару, а його модель вкажіть в додаткових коментарях",
+                reply_markup=types.ReplyKeyboardRemove(),
+            )
+            await state.set_state(make_req.name)
     except:
         await bot.send_message(
             user_id,
