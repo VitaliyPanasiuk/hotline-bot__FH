@@ -5,12 +5,19 @@ from tgbot.config import load_config
 
 config = load_config(".env")
 
+
 async def postgre_start():
-    base = psycopg2.connect(dbname=config.db.database, user=config.db.user, password=config.db.password,host=config.db.host)
+    base = psycopg2.connect(
+        dbname=config.db.database,
+        user=config.db.user,
+        password=config.db.password,
+        host=config.db.host,
+    )
     cur = base.cursor()
     if base:
-        print('data base connect Ok!')
-    cur.execute('''create table if not exists buyers
+        print("data base connect Ok!")
+    cur.execute(
+        """create table if not exists buyers
 (
     id       text not null,
     name     text,
@@ -61,10 +68,12 @@ create table if not exists orders
     msg_s        text,
     chat_b       text,
     chat_s       text,
+    chat_from_s  text,
+    mes_from_s   text[],
     primary key (id)
-);''')
-    
-    
+);"""
+    )
+
     base.commit()
     cur.close()
     base.close()

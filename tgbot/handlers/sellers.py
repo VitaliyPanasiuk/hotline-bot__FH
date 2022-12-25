@@ -297,6 +297,7 @@ async def test_start(message: Message, state: FSMContext):
     st_b = cur.fetchone()
     btn = end_button(data['id'])
     print('st_b',st_b[0])
+    btn_H = homeB_button()
     if st_b[0] == True:
         await bot.edit_message_text(
             chat_id = msg[0] ,
@@ -309,6 +310,7 @@ id замовлення: `{data['id']}` 🟢🟢
 Доставка: {status[4]}
 Спосіб оплати: {status[5]}
 Коментар: {status[3]}''',
+            reply_markup=btn_H.as_markup(),
             parse_mode='Markdown')
     else:
         await bot.edit_message_text(
@@ -345,6 +347,7 @@ id замовлення: `{data['id']}` 🟢🟢
     cur.execute("SELECT chat_s,msg_s FROM orders WHERE id = %s", (data["id"],))
     msg = cur.fetchone()
     btn = end_button(data["id"])
+    btn_H = homeB_button()
     if st_b[0] == True:
         await bot2.edit_message_text(
             chat_id=msg[0],
@@ -357,6 +360,7 @@ id замовлення: `{data['id']}` 🟢🟢
 Категорія: {status[2]}
 Коментар: {status[3]}
     """,
+            # reply_markup=btn_H.as_markup(),
             parse_mode="Markdown",
         )
     else:
@@ -371,6 +375,7 @@ id замовлення: `{data['id']}` 🟢🔴
 Категорія: {status[2]}
 Коментар: {status[3]}
     """,
+            # reply_markup=btn_H.as_markup(),
             parse_mode="Markdown",
         )
     await state.clear()
