@@ -71,10 +71,10 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(name=text)
-    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot2.delete_message(
-        chat_id=message.chat.id, message_id=message.message_id - 1
-    )
+    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot2.delete_message(
+    #     chat_id=message.chat.id, message_id=message.message_id - 1
+    # )
     await bot2.send_message(user_id, "Відправте свій email")
     await state.set_state(reg_user.email)
 
@@ -86,10 +86,10 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(email=text)
-    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot2.delete_message(
-        chat_id=message.chat.id, message_id=message.message_id - 1
-    )
+    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot2.delete_message(
+    #     chat_id=message.chat.id, message_id=message.message_id - 1
+    # )
     await bot2.send_message(
         user_id,
         "Відправте свій номер телефону, що зареєстрований у Телеграм та буде використовуватися для обслуговування клієнтів",
@@ -104,10 +104,10 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(phone=text)
-    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot2.delete_message(
-        chat_id=message.chat.id, message_id=message.message_id - 1
-    )
+    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot2.delete_message(
+    #     chat_id=message.chat.id, message_id=message.message_id - 1
+    # )
     await bot2.send_message(
         user_id,
         "Вкажіть організаційно-правову форму (фізична особа, ФОП, юридична особа)",
@@ -176,10 +176,10 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(price=text)
-    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot2.delete_message(
-        chat_id=message.chat.id, message_id=message.message_id - 1
-    )
+    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot2.delete_message(
+    #     chat_id=message.chat.id, message_id=message.message_id - 1
+    # )
     await bot2.send_message(user_id, "Введіть додаткові умови")
     await state.set_state(accept_ord.terms)
 
@@ -191,10 +191,10 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(terms=text)
-    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot2.delete_message(
-        chat_id=message.chat.id, message_id=message.message_id - 1
-    )
+    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot2.delete_message(
+    #     chat_id=message.chat.id, message_id=message.message_id - 1
+    # )
     await bot2.send_message(user_id, "Введіть коментар")
     await state.set_state(accept_ord.comment)
 
@@ -207,10 +207,10 @@ async def test_start(message: Message, state: FSMContext):
     text = message.text
     await state.update_data(comment=text)
     data = await state.get_data()
-    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot2.delete_message(
-        chat_id=message.chat.id, message_id=message.message_id - 1
-    )
+    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot2.delete_message(
+    #     chat_id=message.chat.id, message_id=message.message_id - 1
+    # )
 
     cur.execute(
         "UPDATE orders SET sellers = sellers || ARRAY[%s], prices = prices || ARRAY[%s], seller_terms = seller_terms || ARRAY[%s], seller_coms = seller_coms || ARRAY[%s] WHERE id = %s",
@@ -254,10 +254,10 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     data = await state.get_data()
-    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot2.delete_message(
-        chat_id=message.chat.id, message_id=message.message_id - 1
-    )
+    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot2.delete_message(
+    #     chat_id=message.chat.id, message_id=message.message_id - 1
+    # )
     # btn = homeS_button()
     if text == "Підтвердити виконання":
         await bot2.send_message(
@@ -361,10 +361,10 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     # btn = homeS_button()
-    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot2.delete_message(
-        chat_id=message.chat.id, message_id=message.message_id - 1
-    )
+    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot2.delete_message(
+    #     chat_id=message.chat.id, message_id=message.message_id - 1
+    # )
     await state.update_data(rate=int(text))
     data = await state.get_data()
     cur.execute("select buyer_id from orders where id = %s", (data["id"],))

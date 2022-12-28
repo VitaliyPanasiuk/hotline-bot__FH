@@ -29,3 +29,4 @@ class make_req(StatesGroup):
     payment = State()
     city = State()
     comment = State()
+    mes_id = State()

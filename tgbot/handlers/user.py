@@ -87,8 +87,8 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(name=text)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
     await bot.send_message(user_id, "Відправте свій номер телефону")
     await state.set_state(reg_user.phone)
 
@@ -104,8 +104,8 @@ async def test_start(message: Message, state: FSMContext):
         (user_id, data["name"], data["phone"], [], [], []),
     )
     base.commit()
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
     await bot.send_message(user_id, "Ви зареєстровані")
     btn = homeB_button()
     cur.execute("SELECT name FROM buyers WHERE id=%s", (str(user_id),))
@@ -116,7 +116,7 @@ async def test_start(message: Message, state: FSMContext):
 
 @user_router.callback_query(lambda c: c.data == "buy")
 async def user_start(callback_query: types.CallbackQuery, state=FSMContext):
-    await bot.send_message(callback_query.from_user.id, "Введіть назву товару ")
+    message_bot = await bot.send_message(callback_query.from_user.id, "Введіть назву товару")
     await state.set_state(make_req.name)
 
 
@@ -124,15 +124,18 @@ async def user_start(callback_query: types.CallbackQuery, state=FSMContext):
 async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
+    chat_id = message.chat.id
     await state.update_data(name=text)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    # await bot.delete_message(chat_id=chat_id, message_id=message.message_id)
+    # await bot.delete_message(chat_id=chat_id, message_id=message.message_id-1)
+    
 
     arr = text.split(" ")
     url = "https://rozetka.com.ua/search/?text="
     for elem in arr:
         url += elem + "+"
 
+    print('end of for')
     option = Options()
 
     option.add_argument("--no-sandbox")
@@ -148,8 +151,9 @@ async def test_start(message: Message, state: FSMContext):
         executable_path="E:\programs\chromedriver_win32\chromedriver.exe",
         chrome_options=option,
     )
+    print('start for Chrome')
     browser.get(url)
-    browser.implicitly_wait(1.5)
+    browser.implicitly_wait(0.1)
     try:
         try:
             browser.find_element(
@@ -221,8 +225,8 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(cat=text)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
 
     await bot.send_message(
         user_id,
@@ -254,14 +258,15 @@ async def user_start(callback_query: types.CallbackQuery, state=FSMContext):
         elif i == "samo":
             s += "Самовивіз "
     await state.update_data(delivers=s)
-    await bot.delete_message(
-        chat_id=callback_query.message.chat.id,
-        message_id=callback_query.message.message_id,
-    )
-    await bot.delete_message(
-        chat_id=callback_query.message.chat.id,
-        message_id=callback_query.message.message_id - 1,
-    )
+    # await bot.delete_message(
+    #     chat_id=callback_query.message.chat.id,
+    #     message_id=callback_query.message.message_id,
+    # )
+    # await bot.delete_message(
+    #     chat_id=callback_query.message.chat.id,
+    #     message_id=callback_query.message.message_id - 1,
+    # )
+    await callback_query.message.delete()
     cur.execute("select payment from buyers where id = %s", (str(user_id),))
     arr = cur.fetchone()
     if arr[0]:
@@ -389,6 +394,7 @@ async def user_start(callback_query: types.CallbackQuery, state=FSMContext):
     cur.execute("SELECT payment FROM buyers WHERE id = %s", (str(user_id),))
     payment = cur.fetchone()
     s = ""
+    print(str(message.chat.id),str(message.message_id),str(message.message_id - 1))
     for i in payment[0]:
         if i == "nak":
             s += "Накладений платіж "
@@ -399,10 +405,11 @@ async def user_start(callback_query: types.CallbackQuery, state=FSMContext):
         elif i == "card_pdv":
             s += "Безготівкова з ПДВ "
     await state.update_data(payment=s)
-    await bot.delete_message(
-        chat_id=callback_query.message.chat.id,
-        message_id=callback_query.message.message_id,
-    )
+    # await bot.delete_message(
+    #     chat_id=callback_query.message.chat.id,
+    #     message_id=callback_query.message.message_id,
+    # )
+    await callback_query.message.delete()
     await bot.send_message(
         user_id, "Чудово, вкажіть своє місто", reply_markup=types.ReplyKeyboardRemove()
     )
@@ -414,8 +421,9 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(city=text)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    print(str(message.chat.id),str(message.message_id),str(message.message_id - 1))
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
     # await bot.send_message(user_id, "Чудово, вкажіть додаткови умові коментарем",reply_markup=types.ReplyKeyboardRemove())
     # await state.set_state(make_req.comment)
 
@@ -534,8 +542,8 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(comment=text)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
     cur.execute("select delivery from buyers where id = %s", (str(user_id),))
     arr = cur.fetchone()
     if arr[0]:
@@ -893,8 +901,8 @@ async def test_start(message: Message, state: FSMContext):
     text = message.text
 
     await state.update_data(rate=int(text))
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
     data = await state.get_data()
     cur.execute("select seller_id from orders where id = %s", (data["id"],))
     seller_id = cur.fetchone()[0]
