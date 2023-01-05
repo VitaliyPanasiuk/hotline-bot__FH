@@ -116,7 +116,9 @@ async def test_start(message: Message, state: FSMContext):
 
 @user_router.callback_query(lambda c: c.data == "buy")
 async def user_start(callback_query: types.CallbackQuery, state=FSMContext):
-    message_bot = await bot.send_message(callback_query.from_user.id, "Введіть назву товару")
+    message_bot = await bot.send_message(
+        callback_query.from_user.id, "Введіть назву товару"
+    )
     await state.set_state(make_req.name)
 
 
@@ -128,14 +130,13 @@ async def test_start(message: Message, state: FSMContext):
     await state.update_data(name=text)
     # await bot.delete_message(chat_id=chat_id, message_id=message.message_id)
     # await bot.delete_message(chat_id=chat_id, message_id=message.message_id-1)
-    
 
     arr = text.split(" ")
     url = "https://rozetka.com.ua/search/?text="
     for elem in arr:
         url += elem + "+"
-
-    print('end of for')
+    print(url)
+    print("end of for")
     option = Options()
 
     option.add_argument("--no-sandbox")
@@ -151,9 +152,9 @@ async def test_start(message: Message, state: FSMContext):
         executable_path="E:\programs\chromedriver_win32\chromedriver.exe",
         chrome_options=option,
     )
-    print('start for Chrome')
+    print("start for Chrome")
     browser.get(url)
-    browser.implicitly_wait(0.1)
+    browser.implicitly_wait(0.5)
     try:
         try:
             browser.find_element(
@@ -181,7 +182,6 @@ async def test_start(message: Message, state: FSMContext):
             )
             for k in test2:
                 categories.append(k.text)
-
         if not categories:
             products_title = browser.find_elements(
                 By.CSS_SELECTOR, ".categories-filter__item"
@@ -266,7 +266,7 @@ async def user_start(callback_query: types.CallbackQuery, state=FSMContext):
     #     chat_id=callback_query.message.chat.id,
     #     message_id=callback_query.message.message_id - 1,
     # )
-    await callback_query.message.delete()
+    # await callback_query.message.delete()
     cur.execute("select payment from buyers where id = %s", (str(user_id),))
     arr = cur.fetchone()
     if arr[0]:
@@ -394,7 +394,6 @@ async def user_start(callback_query: types.CallbackQuery, state=FSMContext):
     cur.execute("SELECT payment FROM buyers WHERE id = %s", (str(user_id),))
     payment = cur.fetchone()
     s = ""
-    print(str(message.chat.id),str(message.message_id),str(message.message_id - 1))
     for i in payment[0]:
         if i == "nak":
             s += "Накладений платіж "
@@ -409,7 +408,7 @@ async def user_start(callback_query: types.CallbackQuery, state=FSMContext):
     #     chat_id=callback_query.message.chat.id,
     #     message_id=callback_query.message.message_id,
     # )
-    await callback_query.message.delete()
+    # await callback_query.message.delete()
     await bot.send_message(
         user_id, "Чудово, вкажіть своє місто", reply_markup=types.ReplyKeyboardRemove()
     )
@@ -421,7 +420,6 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(city=text)
-    print(str(message.chat.id),str(message.message_id),str(message.message_id - 1))
     # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id)
     # await bot.delete_message(chat_id=message.chat.id, message_id=message.message_id - 1)
     # await bot.send_message(user_id, "Чудово, вкажіть додаткови умові коментарем",reply_markup=types.ReplyKeyboardRemove())
@@ -481,7 +479,7 @@ async def test_start(message: Message, state: FSMContext):
         data["payment"],
     )
     # TODO: change timer to 600
-    await asyncio.sleep(120)
+    await asyncio.sleep(600)
     print("end of await answers from sellers")
     # await bot.delete_message(chat_id = message.chat.id ,message_id = message.message_id + 1)
     cur.execute(
@@ -572,7 +570,7 @@ async def user_start(
     # term = callback_data.term
     # com = callback_data.com
     order_id = callback_data.order_id
-    # await callback_query.message.delete()
+    await callback_query.message.delete()
     print("accept order")
     cur.execute(
         """SELECT sellers,prices,seller_terms,seller_coms
