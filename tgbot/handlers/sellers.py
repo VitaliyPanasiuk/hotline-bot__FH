@@ -53,9 +53,9 @@ async def user_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     auf_user = await auf("seller", user_id)
     if not auf_user:
-        await bot2.send_message(user_id, "Привіт!")
-        await bot2.send_message(user_id, "Відправте своє ім'я або назву компанії")
+        message_to_delete = await bot2.send_message(user_id, "Привіт! Відправте своє ім'я або назву компанії")
         await state.set_state(reg_user.name)
+        await state.update_data(message_to_delete=message_to_delete.message_id)
     else:
         # btn = homeS_button()
         # await bot2.send_message(user_id, "Привіт, "+ message.from_user.first_name,reply_markup=btn.as_markup())
@@ -71,11 +71,11 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(name=text)
-    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    # await bot2.delete_message(
-    #     chat_id=message.chat.id, message_id=message.message_id - 1
-    # )
-    await bot2.send_message(user_id, "Відправте свій email")
+    data = await state.get_data()
+    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    await bot2.delete_message(chat_id=message.chat.id, message_id=data['message_to_delete'])
+    message_to_delete = await bot2.send_message(user_id, "Відправте свій email")
+    await state.update_data(message_to_delete=message_to_delete.message_id)
     await state.set_state(reg_user.email)
 
 
@@ -86,14 +86,16 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(email=text)
-    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    # await bot2.delete_message(
-    #     chat_id=message.chat.id, message_id=message.message_id - 1
-    # )
-    await bot2.send_message(
+    data = await state.get_data()
+    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    await bot2.delete_message(
+        chat_id=message.chat.id, message_id=data['message_to_delete']
+    )
+    message_to_delete = await bot2.send_message(
         user_id,
         "Відправте свій номер телефону, що зареєстрований у Телеграм та буде використовуватися для обслуговування клієнтів",
     )
+    await state.update_data(message_to_delete=message_to_delete.message_id)
     await state.set_state(reg_user.phone)
 
 
@@ -104,14 +106,16 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(phone=text)
-    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    # await bot2.delete_message(
-    #     chat_id=message.chat.id, message_id=message.message_id - 1
-    # )
-    await bot2.send_message(
+    data = await state.get_data()
+    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    await bot2.delete_message(
+        chat_id=message.chat.id, message_id=data['message_to_delete']
+    )
+    message_to_delete = await bot2.send_message(
         user_id,
         "Вкажіть організаційно-правову форму (фізична особа, ФОП, юридична особа)",
     )
+    await state.update_data(message_to_delete=message_to_delete.message_id)
     await state.set_state(reg_user.org)
 
 
@@ -121,6 +125,10 @@ async def test_start(message: Message, state: FSMContext):
     text = message.text
     await state.update_data(org=text)
     data = await state.get_data()
+    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    await bot2.delete_message(
+        chat_id=message.chat.id, message_id=data['message_to_delete']
+    )
     cur.execute(
         "INSERT INTO sellers (id, name, phone,org_form,email,rating) VALUES (%s,%s,%s, %s, %s, %s)",
         (user_id, data["name"], data["phone"], data["org"], data["email"], []),
@@ -147,15 +155,15 @@ async def user_start(
     now = datetime.datetime.now()
     cur.execute("SELECT valid_time FROM orders WHERE id = %s", (int(order_id),))
     valid_time = cur.fetchone()
-    print(valid_time)
     if now > valid_time[0]:
         msg = await bot2.send_message(user_id, "Час на відповідь вичерпано")
         asyncio.create_task(delete_message(msg, 5))
     else:
         await state.update_data(id=order_id)
         await state.update_data(seller_id=user_id)
-        await bot2.send_message(user_id, "Введіть ціну")
+        message_to_delete = await bot2.send_message(user_id, "Введіть ціну")
         await state.set_state(accept_ord.price)
+        await state.update_data(message_to_delete=message_to_delete.message_id)
 
 
 @seller_router.callback_query(SellersCallbackFactory.filter(F.action == "delete_order"))
@@ -176,11 +184,13 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(price=text)
-    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    # await bot2.delete_message(
-    #     chat_id=message.chat.id, message_id=message.message_id - 1
-    # )
-    await bot2.send_message(user_id, "Введіть додаткові умови")
+    data = await state.get_data()
+    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    await bot2.delete_message(
+        chat_id=message.chat.id, message_id=data['message_to_delete']
+    )
+    message_to_delete = await bot2.send_message(user_id, "Введіть додаткові умови")
+    await state.update_data(message_to_delete=message_to_delete.message_id)
     await state.set_state(accept_ord.terms)
 
 
@@ -191,11 +201,13 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     await state.update_data(terms=text)
-    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    # await bot2.delete_message(
-    #     chat_id=message.chat.id, message_id=message.message_id - 1
-    # )
-    await bot2.send_message(user_id, "Введіть коментар")
+    data = await state.get_data()
+    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    await bot2.delete_message(
+        chat_id=message.chat.id, message_id=data['message_to_delete']
+    )
+    message_to_delete = await bot2.send_message(user_id, "Введіть коментар")
+    await state.update_data(message_to_delete=message_to_delete.message_id)
     await state.set_state(accept_ord.comment)
 
 
@@ -207,10 +219,10 @@ async def test_start(message: Message, state: FSMContext):
     text = message.text
     await state.update_data(comment=text)
     data = await state.get_data()
-    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    # await bot2.delete_message(
-    #     chat_id=message.chat.id, message_id=message.message_id - 1
-    # )
+    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    await bot2.delete_message(
+        chat_id=message.chat.id, message_id=data['message_to_delete']
+    )
 
     cur.execute(
         "UPDATE orders SET sellers = sellers || ARRAY[%s], prices = prices || ARRAY[%s], seller_terms = seller_terms || ARRAY[%s], seller_coms = seller_coms || ARRAY[%s] WHERE id = %s",
@@ -241,9 +253,10 @@ async def user_start(
     # await callback_query.message.delete()
     await state.update_data(id=int(order_id))
     btn = choose_action()
-    await bot2.send_message(
+    message_to_delete = await bot2.send_message(
         user_id, f"Оберіть дію", reply_markup=btn.as_markup(resize_keyboard=True)
     )
+    await state.update_data(message_to_delete=message_to_delete.message_id)
     await state.set_state(end_order.action)
 
 
@@ -254,17 +267,18 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     data = await state.get_data()
-    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    # await bot2.delete_message(
-    #     chat_id=message.chat.id, message_id=message.message_id - 1
-    # )
+    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    await bot2.delete_message(
+        chat_id=message.chat.id, message_id=data['message_to_delete']
+    )
     # btn = homeS_button()
     if text == "Підтвердити виконання":
-        await bot2.send_message(
+        message_to_delete = await bot2.send_message(
             user_id,
             f"Введіть бал, що буде поставленно покупцю(від 1 до 10)",
             reply_markup=types.ReplyKeyboardRemove(),
         )
+        await state.update_data(message_to_delete=message_to_delete.message_id)
         await state.set_state(end_order.rate)
     # elif text == 'Скарга':
     #     cur.execute("select buyer_id from orders where id = %s",(data['id'],))
@@ -361,10 +375,11 @@ async def test_start(message: Message, state: FSMContext):
     user_id = message.from_user.id
     text = message.text
     # btn = homeS_button()
-    # await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
-    # await bot2.delete_message(
-    #     chat_id=message.chat.id, message_id=message.message_id - 1
-    # )
+    data = await state.get_data()
+    await bot2.delete_message(chat_id=message.chat.id, message_id=message.message_id)
+    await bot2.delete_message(
+        chat_id=message.chat.id, message_id=data['message_to_delete']
+    )
     await state.update_data(rate=int(text))
     data = await state.get_data()
     cur.execute("select buyer_id from orders where id = %s", (data["id"],))

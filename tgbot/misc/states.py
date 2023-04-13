@@ -8,11 +8,13 @@ class reg_user(StatesGroup):
     phone = State()
     org = State()
     email = State()
+    message_to_delete = State()
 
 class end_order(StatesGroup):
     id = State()
     rate = State()
     action = State()
+    message_to_delete = State()
 
 class accept_ord(StatesGroup):
     id = State()
@@ -20,6 +22,7 @@ class accept_ord(StatesGroup):
     comment = State()
     terms = State()
     seller_id = State()
+    message_to_delete = State()
     
 class make_req(StatesGroup):
     name = State()
@@ -30,3 +33,4 @@ class make_req(StatesGroup):
     city = State()
     comment = State()
     mes_id = State()
+    message_to_delete = State()
